@@ -594,5 +594,58 @@
   "tapToRead": "แตะเพื่ออ่าน",
   "@tapToRead": {
     "description": "Ours."
+  },
+  "backupTitle": "💾 สำรองข้อมูล",
+  "@backupTitle": {
+    "description": "Ours (#19)."
+  },
+  "backupSub": "ดาว ตารางเวร เคสที่นำเข้า และการตั้งค่า รวมไว้ในไฟล์เดียว ใช้ย้ายไปเครื่องใหม่หรือหลังติดตั้งแอปใหม่",
+  "@backupSub": {
+    "description": "Ours (#19)."
+  },
+  "exportBackup": "ส่งออกไฟล์สำรองข้อมูล",
+  "@exportBackup": {
+    "description": "Ours (#19)."
+  },
+  "backupSaved": "บันทึกไฟล์สำรองข้อมูลเรียบร้อย 💾",
+  "@backupSaved": {
+    "description": "Ours (#19)."
+  },
+  "backupFailed": "บันทึกไฟล์สำรองข้อมูลไม่สำเร็จ",
+  "@backupFailed": {
+    "description": "Ours (#19)."
+  },
+  "restoreBackup": "กู้คืนจากไฟล์สำรองข้อมูล",
+  "@restoreBackup": {
+    "description": "Ours (#19)."
+  },
+  "restoreReadError": "เกิดข้อผิดพลาดในการอ่านไฟล์",
+  "@restoreReadError": {
+    "description": "Ours (#19)."
+  },
+  "restoreBadTitle": "ใช้ไฟล์สำรองข้อมูลนี้ไม่ได้",
+  "@restoreBadTitle": {
+    "description": "Ours (#19)."
+  },
+  "restoreConfirmTitle": "กู้คืนข้อมูลจากไฟล์นี้?",
+  "@restoreConfirmTitle": {
+    "description": "Ours (#19)."
+  },
+  "restoreConfirmBody": "ดาว ตารางเวร เคสที่นำเข้า และการตั้งค่าในเครื่องนี้ จะถูกแทนที่ด้วยข้อมูลในไฟล์ที่บันทึกเมื่อ {date} ย้อนกลับไม่ได้",
+  "@restoreConfirmBody": {
+    "description": "Ours (#19). date: when the backup was made, as d/M/yyyy (Buddhist era) HH:mm.",
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "restoreConfirm": "กู้คืน",
+  "@restoreConfirm": {
+    "description": "Ours (#19)."
+  },
+  "restored": "กู้คืนข้อมูลเรียบร้อย ✅",
+  "@restored": {
+    "description": "Ours (#19)."
   }
 }

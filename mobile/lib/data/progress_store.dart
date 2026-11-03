@@ -1,12 +1,13 @@
-import 'dart:convert';
 import 'dart:math';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
+import '../game/backup.dart';
 import '../game/case_session.dart';
 import '../game/progress.dart';
 import '../game/roster.dart';
+import 'db/game_database.dart';
+import 'db_progress_store.dart';
 
 /// The player's settings (his SettingsPage): both on by default.
 class GameSettings {
@@ -19,8 +20,8 @@ class GameSettings {
       GameSettings(sound: sound ?? this.sound, haptics: haptics ?? this.haptics);
 }
 
-/// Where progress lives on the device. Today one small JSON value in shared_preferences
-/// (localStorage on the web); a database can replace it behind this interface when sync comes.
+/// Where the player's data lives on the device: [DbProgressStore] (SQLite, #19) in the app, a
+/// memory store in widget tests.
 abstract interface class ProgressStore {
   Future<Progress> load();
   Future<void> save(Progress progress);
@@ -38,81 +39,24 @@ abstract interface class ProgressStore {
   /// The imported case file, as JSON text; null when the ward plays the shipped cases.
   Future<String?> loadImportedCases();
   Future<void> saveImportedCases(String? json);
+
+  /// A backup replaces progress, roster, imported cases and settings; the first three all or
+  /// nothing.
+  Future<void> restore(PlayerData data);
 }
 
-class PrefsProgressStore implements ProgressStore {
-  PrefsProgressStore([SharedPreferencesAsync? prefs]) : _prefs = prefs ?? SharedPreferencesAsync();
-
-  final SharedPreferencesAsync _prefs;
-  static const _progressKey = 'progress.v${Progress.schemaVersion}';
-  static const _noticeKey = 'notice.seen';
-  static const _rosterKey = 'roster.v${Roster.schemaVersion}';
-  static const _casesKey = 'cases.imported.v1';
-
-  @override
-  Future<Progress> load() async {
-    final raw = await _prefs.getString(_progressKey);
-    if (raw == null) return Progress.empty;
-    try {
-      return Progress.fromJson(jsonDecode(raw));
-    } on FormatException {
-      return Progress.empty;
-    }
-  }
-
-  @override
-  Future<void> save(Progress progress) =>
-      _prefs.setString(_progressKey, jsonEncode(progress.toJson()));
-
-  @override
-  Future<Roster> loadRoster() async {
-    final raw = await _prefs.getString(_rosterKey);
-    if (raw == null) return Roster.empty;
-    try {
-      return Roster.fromJson(jsonDecode(raw));
-    } on FormatException {
-      return Roster.empty;
-    }
-  }
-
-  @override
-  Future<void> saveRoster(Roster roster) =>
-      _prefs.setString(_rosterKey, jsonEncode(roster.toJson()));
-
-  @override
-  Future<String?> loadImportedCases() => _prefs.getString(_casesKey);
-
-  @override
-  Future<void> saveImportedCases(String? json) =>
-      json == null ? _prefs.remove(_casesKey) : _prefs.setString(_casesKey, json);
-
-  @override
-  Future<bool> noticeSeen() async => await _prefs.getBool(_noticeKey) ?? false;
-
-  @override
-  Future<void> markNoticeSeen() => _prefs.setBool(_noticeKey, true);
-
-  @override
-  Future<GameSettings> loadSettings() async => GameSettings(
-    sound: await _prefs.getBool('settings.sound') ?? true,
-    haptics: await _prefs.getBool('settings.haptics') ?? true,
-  );
-
-  @override
-  Future<void> saveSettings(GameSettings settings) async {
-    await _prefs.setBool('settings.sound', settings.sound);
-    await _prefs.setBool('settings.haptics', settings.haptics);
-  }
-}
-
-final progressStoreProvider = Provider<ProgressStore>((ref) => PrefsProgressStore());
+final progressStoreProvider = Provider<ProgressStore>((ref) {
+  final db = GameDatabase.open();
+  ref.onDispose(db.close);
+  return DbProgressStore(db);
+});
 
 class ProgressNotifier extends AsyncNotifier<Progress> {
   @override
   Future<Progress> build() => ref.watch(progressStoreProvider).load();
 
-  /// Saves a finished case and says what it changed.
-  /// Saves a finished case; a level up is judged on the ward's beds [ward].
+  /// Saves a finished case and says what it changed; a level up is judged on the ward's beds
+  /// [ward].
   Future<RecordOutcome> record(CaseResult result, {Iterable<int>? ward}) async {
     if (state.value == null) await future;
     final current = state.value ?? Progress.empty;
@@ -130,6 +74,10 @@ class ProgressNotifier extends AsyncNotifier<Progress> {
     state = AsyncData(next);
     await ref.read(progressStoreProvider).save(next);
   }
+
+  /// A restored backup, shown at once and before it is written, so a play-clock tick saves on
+  /// top of it rather than putting the old progress back.
+  void show(Progress progress) => state = AsyncData(progress);
 
   /// "Reset progress" in settings: every bed and counter back to zero.
   Future<void> reset() async {
