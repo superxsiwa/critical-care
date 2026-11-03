@@ -3,22 +3,27 @@ package server_test
 import (
 	"bytes"
 	"context"
+	"database/sql"
 	"encoding/json"
 	"flag"
 	"io"
 	"log/slog"
 	"net/http"
+	"net/http/cookiejar"
 	"net/http/httptest"
+	"net/url"
 	"os"
 	"path/filepath"
 	"strings"
 	"testing"
 	"time"
 
+	"casestudio/internal/auth"
 	"casestudio/internal/cases"
 	"casestudio/internal/db"
 	"casestudio/internal/migrate"
 	"casestudio/internal/server"
+	"casestudio/internal/store"
 )
 
 var update = flag.Bool("update", false, "rewrite contract/examples/valid/studio-export.json")
@@ -27,8 +32,16 @@ const contract = "../../../../contract"
 
 var fixed = time.Date(2026, 11, 3, 12, 0, 0, 0, time.UTC)
 
-// studio runs the server in-process on its own migrated database file.
+const adminPassword = "admin-password-1"
+
+// studio runs the server in-process on its own migrated database file, with an admin account
+// ("admin") signed in on srv.Client().
 func studio(t *testing.T) *httptest.Server {
+	srv, _ := studioDB(t)
+	return srv
+}
+
+func studioDB(t *testing.T) (*httptest.Server, *sql.DB) {
 	t.Helper()
 	d, err := db.Open(filepath.Join(t.TempDir(), "casestudio.db"))
 	if err != nil {
@@ -39,13 +52,50 @@ func studio(t *testing.T) *httptest.Server {
 		t.Fatal(err)
 	}
 	log := slog.New(slog.NewTextHandler(io.Discard, nil))
-	srv := httptest.NewServer(server.New(server.Deps{DB: d, Log: log, Now: func() time.Time { return fixed }}))
+	srv := httptest.NewServer(server.New(server.Deps{DB: d, Log: log, Now: func() time.Time { return fixed },
+		Secret: []byte("a test secret of at least 32 bytes!")}))
 	t.Cleanup(srv.Close)
-	return srv
+	addAccount(t, d, "admin", "Admin", adminPassword, true)
+	signIn(t, srv, srv.Client(), "admin", adminPassword)
+	return srv, d
 }
 
-// call sends body (a value to encode, or raw bytes) and decodes the answer into out when given.
+func addAccount(t *testing.T, d *sql.DB, username, name, password string, admin bool) {
+	t.Helper()
+	if _, err := auth.NewAccount(context.Background(), store.New(d), username, name, password, admin, "2026-11-03T12:00:00Z"); err != nil {
+		t.Fatal(err)
+	}
+}
+
+// browser is a client with its own cookies, as a browser has.
+func browser(srv *httptest.Server) *http.Client {
+	jar, _ := cookiejar.New(nil)
+	return &http.Client{Transport: srv.Client().Transport, Jar: jar}
+}
+
+// signIn signs c in as the page does: the session probe gives the CSRF cookie, then the sign-in.
+func signIn(t *testing.T, srv *httptest.Server, c *http.Client, username, password string) {
+	t.Helper()
+	if c.Jar == nil {
+		c.Jar, _ = cookiejar.New(nil)
+	}
+	if code, body := send(t, srv, c, "GET", "/api/auth/session", nil, nil); code != 200 {
+		t.Fatalf("session: %d %s", code, body)
+	}
+	if code, body := send(t, srv, c, "POST", "/api/auth/signin", map[string]string{"username": username, "password": password}, nil); code != 200 {
+		t.Fatalf("sign in %s: %d %s", username, code, body)
+	}
+}
+
+// call sends body (a value to encode, or raw bytes) as the signed-in admin, and decodes the answer
+// into out when given.
 func call(t *testing.T, srv *httptest.Server, method, path string, body any, out any) (int, []byte) {
+	t.Helper()
+	return send(t, srv, srv.Client(), method, path, body, out)
+}
+
+// send is call with a client of its own; a write echoes the client's CSRF cookie in its header.
+func send(t *testing.T, srv *httptest.Server, c *http.Client, method, path string, body any, out any) (int, []byte) {
 	t.Helper()
 	var reader io.Reader
 	switch b := body.(type) {
@@ -63,7 +113,15 @@ func call(t *testing.T, srv *httptest.Server, method, path string, body any, out
 	if err != nil {
 		t.Fatal(err)
 	}
-	res, err := srv.Client().Do(req)
+	if c.Jar != nil && method != "GET" {
+		u, _ := url.Parse(srv.URL)
+		for _, k := range c.Jar.Cookies(u) {
+			if k.Name == auth.CSRFCookie {
+				req.Header.Set(auth.CSRFHeader, k.Value)
+			}
+		}
+	}
+	res, err := c.Do(req)
 	if err != nil {
 		t.Fatal(err)
 	}

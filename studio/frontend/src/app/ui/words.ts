@@ -1,0 +1,38 @@
+import { ApiError } from '../api/studio-api';
+
+/** The server's refusal codes in the screen's words. Problem texts of a case stay the server's. */
+const REFUSALS: Record<string, string> = {
+  'signed-out': 'กรุณาเข้าสู่ระบบ',
+  wrong: 'ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง',
+  inactive: 'บัญชีนี้ถูกปิดอยู่ ติดต่อผู้ดูแลระบบ',
+  'admin-only': 'เฉพาะผู้ดูแลระบบเท่านั้น',
+  csrf: 'คำขอนี้ไม่ได้มาจากหน้าของสตูดิโอ: โหลดหน้าใหม่แล้วลองอีกครั้ง',
+  'password-short': 'รหัสผ่านต้องมีอย่างน้อย 10 ตัวอักษร',
+  'password-long': 'รหัสผ่านยาวได้ไม่เกิน 128 ตัวอักษร',
+  'password-blank': 'รหัสผ่านต้องไม่เป็นช่องว่างทั้งหมด',
+  'password-username': 'รหัสผ่านต้องไม่เหมือนชื่อผู้ใช้',
+  'password-common': 'รหัสผ่านนี้คนใช้กันทั่วไป เลือกรหัสอื่น',
+  'username-bad': 'ชื่อผู้ใช้ใช้ได้เฉพาะตัวอักษรอังกฤษ ตัวเลข จุด ขีด และขีดล่าง 2 ถึง 40 ตัว',
+  'username-taken': 'ชื่อผู้ใช้นี้มีคนใช้แล้ว',
+  'name-blank': 'ใส่ชื่อของเจ้าของบัญชี',
+  self: 'ปิดบัญชีหรือสิทธิ์ผู้ดูแลของตัวเองไม่ได้',
+  'last-admin': 'ต้องมีผู้ดูแลระบบที่ใช้งานอยู่อย่างน้อย 1 คน',
+  'not-found': 'ไม่พบรายการนี้',
+};
+
+/** A refusal in words: Thai for the codes the screen knows, the server's own text otherwise. */
+export function failure(e: unknown): string {
+  if (e instanceof ApiError) {
+    if (e.status === 0) return 'เชื่อมต่อเซิร์ฟเวอร์ไม่ได้';
+    if (e.code === 'throttled')
+      return `ใส่รหัสผ่านผิดหลายครั้ง ลองใหม่ในอีก ${e.body.minutes ?? 15} นาที`;
+    return REFUSALS[e.code] ?? e.body.detail;
+  }
+  return String(e);
+}
+
+export function formatTime(iso: string): string {
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return '';
+  return new Intl.DateTimeFormat('th-TH', { dateStyle: 'medium', timeStyle: 'short' }).format(d);
+}

@@ -11,9 +11,10 @@ import (
 )
 
 const createDraft = `-- name: CreateDraft :one
-INSERT INTO drafts (body, bed_num, case_title, version, created_at, updated_at)
-VALUES (?1, ?2, ?3, 1, ?4, ?4)
-RETURNING id, body, bed_num, case_title, version, created_at, updated_at
+INSERT INTO drafts (body, bed_num, case_title, version, created_at, updated_at, created_by, updated_by)
+VALUES (?1, ?2, ?3, 1, ?4, ?4,
+        ?5, ?5)
+RETURNING id
 `
 
 type CreateDraftParams struct {
@@ -21,26 +22,20 @@ type CreateDraftParams struct {
 	BedNum    sql.NullInt64
 	CaseTitle string
 	Now       string
+	UserID    sql.NullInt64
 }
 
-func (q *Queries) CreateDraft(ctx context.Context, arg CreateDraftParams) (Draft, error) {
+func (q *Queries) CreateDraft(ctx context.Context, arg CreateDraftParams) (int64, error) {
 	row := q.db.QueryRowContext(ctx, createDraft,
 		arg.Body,
 		arg.BedNum,
 		arg.CaseTitle,
 		arg.Now,
+		arg.UserID,
 	)
-	var i Draft
-	err := row.Scan(
-		&i.ID,
-		&i.Body,
-		&i.BedNum,
-		&i.CaseTitle,
-		&i.Version,
-		&i.CreatedAt,
-		&i.UpdatedAt,
-	)
-	return i, err
+	var id int64
+	err := row.Scan(&id)
+	return id, err
 }
 
 const deleteDraft = `-- name: DeleteDraft :execrows
@@ -62,14 +57,27 @@ func (q *Queries) DeleteDraft(ctx context.Context, arg DeleteDraftParams) (int64
 }
 
 const getDraft = `-- name: GetDraft :one
-SELECT id, body, bed_num, case_title, version, created_at, updated_at
-FROM drafts
-WHERE id = ?1
+SELECT d.id, d.body, d.bed_num, d.case_title, d.version, d.created_at, d.updated_at,
+       coalesce(u.name, '') AS updated_by_name
+FROM drafts d
+LEFT JOIN users u ON u.id = d.updated_by
+WHERE d.id = ?1
 `
 
-func (q *Queries) GetDraft(ctx context.Context, id int64) (Draft, error) {
+type GetDraftRow struct {
+	ID            int64
+	Body          string
+	BedNum        sql.NullInt64
+	CaseTitle     string
+	Version       int64
+	CreatedAt     string
+	UpdatedAt     string
+	UpdatedByName string
+}
+
+func (q *Queries) GetDraft(ctx context.Context, id int64) (GetDraftRow, error) {
 	row := q.db.QueryRowContext(ctx, getDraft, id)
-	var i Draft
+	var i GetDraftRow
 	err := row.Scan(
 		&i.ID,
 		&i.Body,
@@ -78,25 +86,39 @@ func (q *Queries) GetDraft(ctx context.Context, id int64) (Draft, error) {
 		&i.Version,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.UpdatedByName,
 	)
 	return i, err
 }
 
 const listDrafts = `-- name: ListDrafts :many
-SELECT id, body, bed_num, case_title, version, created_at, updated_at
-FROM drafts
-ORDER BY bed_num IS NULL, bed_num, id
+SELECT d.id, d.body, d.bed_num, d.case_title, d.version, d.created_at, d.updated_at,
+       coalesce(u.name, '') AS updated_by_name
+FROM drafts d
+LEFT JOIN users u ON u.id = d.updated_by
+ORDER BY d.bed_num IS NULL, d.bed_num, d.id
 `
 
-func (q *Queries) ListDrafts(ctx context.Context) ([]Draft, error) {
+type ListDraftsRow struct {
+	ID            int64
+	Body          string
+	BedNum        sql.NullInt64
+	CaseTitle     string
+	Version       int64
+	CreatedAt     string
+	UpdatedAt     string
+	UpdatedByName string
+}
+
+func (q *Queries) ListDrafts(ctx context.Context) ([]ListDraftsRow, error) {
 	rows, err := q.db.QueryContext(ctx, listDrafts)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	items := []Draft{}
+	items := []ListDraftsRow{}
 	for rows.Next() {
-		var i Draft
+		var i ListDraftsRow
 		if err := rows.Scan(
 			&i.ID,
 			&i.Body,
@@ -105,6 +127,7 @@ func (q *Queries) ListDrafts(ctx context.Context) ([]Draft, error) {
 			&i.Version,
 			&i.CreatedAt,
 			&i.UpdatedAt,
+			&i.UpdatedByName,
 		); err != nil {
 			return nil, err
 		}
@@ -119,12 +142,11 @@ func (q *Queries) ListDrafts(ctx context.Context) ([]Draft, error) {
 	return items, nil
 }
 
-const updateDraft = `-- name: UpdateDraft :one
+const updateDraft = `-- name: UpdateDraft :execrows
 UPDATE drafts
 SET body = ?1, bed_num = ?2, case_title = ?3,
-    version = version + 1, updated_at = ?4
-WHERE id = ?5 AND version = ?6
-RETURNING id, body, bed_num, case_title, version, created_at, updated_at
+    version = version + 1, updated_at = ?4, updated_by = ?5
+WHERE id = ?6 AND version = ?7
 `
 
 type UpdateDraftParams struct {
@@ -132,28 +154,23 @@ type UpdateDraftParams struct {
 	BedNum    sql.NullInt64
 	CaseTitle string
 	Now       string
+	UserID    sql.NullInt64
 	ID        int64
 	Version   int64
 }
 
-func (q *Queries) UpdateDraft(ctx context.Context, arg UpdateDraftParams) (Draft, error) {
-	row := q.db.QueryRowContext(ctx, updateDraft,
+func (q *Queries) UpdateDraft(ctx context.Context, arg UpdateDraftParams) (int64, error) {
+	result, err := q.db.ExecContext(ctx, updateDraft,
 		arg.Body,
 		arg.BedNum,
 		arg.CaseTitle,
 		arg.Now,
+		arg.UserID,
 		arg.ID,
 		arg.Version,
 	)
-	var i Draft
-	err := row.Scan(
-		&i.ID,
-		&i.Body,
-		&i.BedNum,
-		&i.CaseTitle,
-		&i.Version,
-		&i.CreatedAt,
-		&i.UpdatedAt,
-	)
-	return i, err
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected()
 }
