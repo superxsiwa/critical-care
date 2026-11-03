@@ -4,14 +4,16 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../app/theme.dart';
+import '../../data/backup_service.dart';
 import '../../data/case_files.dart';
 import '../../data/progress_store.dart';
 import '../../data/providers.dart';
+import '../../game/backup.dart';
 import '../../game/case_import.dart';
 import '../../l10n/generated/app_localizations.dart';
 
-/// Sound, vibration, the cases (his JSON export and import, back to the standard cases) and
-/// "reset progress", after his SettingsPage and CaseManagerPage.
+/// Sound, vibration, the cases (his JSON export and import, back to the standard cases), the
+/// backup file (#19) and "reset progress", after his SettingsPage and CaseManagerPage.
 class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key});
 
@@ -78,6 +80,30 @@ class SettingsScreen extends ConsumerWidget {
                     title: Text(l.resetCases),
                     onTap: () => _useBundled(context, ref, l),
                   ),
+              ],
+            ),
+          ),
+          Card(
+            color: Colors.white,
+            child: Column(
+              children: [
+                ListTile(
+                  title: Text(
+                    l.backupTitle,
+                    style: const TextStyle(fontWeight: FontWeight.w600, color: AppColors.sky700),
+                  ),
+                  subtitle: Text(l.backupSub),
+                ),
+                ListTile(
+                  leading: const Icon(Icons.save_alt_rounded),
+                  title: Text(l.exportBackup),
+                  onTap: () => _exportBackup(context, ref, l),
+                ),
+                ListTile(
+                  leading: const Icon(Icons.settings_backup_restore_rounded),
+                  title: Text(l.restoreBackup),
+                  onTap: () => _restoreBackup(context, ref, l),
+                ),
               ],
             ),
           ),
@@ -178,23 +204,7 @@ class SettingsScreen extends ConsumerWidget {
     if (!context.mounted) return;
     switch (result) {
       case CasesRejected(:final problems):
-        const shown = 8;
-        await showDialog<void>(
-          context: context,
-          builder: (context) => AlertDialog(
-            title: Text(l.importBadTitle),
-            content: SingleChildScrollView(
-              child: Text(
-                [
-                  ...problems.take(shown),
-                  if (problems.length > shown) l.moreProblems(problems.length - shown),
-                ].join('\n'),
-                style: const TextStyle(fontSize: 13),
-              ),
-            ),
-            actions: [TextButton(onPressed: () => Navigator.pop(context), child: Text(l.close))],
-          ),
-        );
+        await _showProblems(context, l, l.importBadTitle, problems);
       case CasesRead():
         final ok = await _confirm(
           context,
@@ -206,6 +216,75 @@ class SettingsScreen extends ConsumerWidget {
         if (!ok) return;
         await cases.use(result);
         if (context.mounted) _toast(context, l.imported(result.cases.length));
+    }
+  }
+
+  /// What is wrong with a chosen file, the first few lines of it.
+  Future<void> _showProblems(
+    BuildContext context,
+    AppLocalizations l,
+    String title,
+    List<String> problems,
+  ) {
+    const shown = 8;
+    return showDialog<void>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(title),
+        content: SingleChildScrollView(
+          child: Text(
+            [
+              ...problems.take(shown),
+              if (problems.length > shown) l.moreProblems(problems.length - shown),
+            ].join('\n'),
+            style: const TextStyle(fontSize: 13),
+          ),
+        ),
+        actions: [TextButton(onPressed: () => Navigator.pop(context), child: Text(l.close))],
+      ),
+    );
+  }
+
+  /// The backup file: progress, roster, imported cases and settings, saved where the player
+  /// chooses.
+  Future<void> _exportBackup(BuildContext context, WidgetRef ref, AppLocalizations l) async {
+    try {
+      final text = await ref.read(backupProvider).exportText();
+      final saved = await ref.read(caseFilesProvider).save(backupFileName(clock.now()), text);
+      if (saved && context.mounted) _toast(context, l.backupSaved);
+    } on Exception {
+      if (context.mounted) _toast(context, l.backupFailed);
+    }
+  }
+
+  /// A backup file replaces everything after every check and the player's yes.
+  Future<void> _restoreBackup(BuildContext context, WidgetRef ref, AppLocalizations l) async {
+    final String? text;
+    try {
+      text = await ref.read(caseFilesProvider).pick();
+    } on Exception {
+      if (context.mounted) _toast(context, l.restoreReadError);
+      return;
+    }
+    if (text == null || !context.mounted) return;
+    final backup = ref.read(backupProvider);
+    final result = await backup.read(text);
+    if (!context.mounted) return;
+    switch (result) {
+      case BackupRejected(:final problems):
+        await _showProblems(context, l, l.restoreBadTitle, problems);
+      case BackupOk(:final data, :final createdAt):
+        final ok = await _confirm(
+          context,
+          l,
+          title: l.restoreConfirmTitle,
+          body: l.restoreConfirmBody(_thaiDateTime(createdAt.toLocal())),
+          yes: l.restoreConfirm,
+          danger: true,
+        );
+        if (!ok) return;
+        await backup.restore(data);
+        if (context.mounted) _toast(context, l.restored);
     }
   }
 
@@ -222,3 +301,8 @@ class SettingsScreen extends ConsumerWidget {
     if (context.mounted) _toast(context, l.resetCasesDone);
   }
 }
+
+/// `3/11/2569 17:40`: day/month/Buddhist-era year, as Thai dates are written.
+String _thaiDateTime(DateTime t) =>
+    '${t.day}/${t.month}/${t.year + 543} ${t.hour.toString().padLeft(2, '0')}:'
+    '${t.minute.toString().padLeft(2, '0')}';

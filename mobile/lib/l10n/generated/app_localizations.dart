@@ -1189,6 +1189,78 @@ abstract class AppLocalizations {
   /// In th, this message translates to:
   /// **'แตะเพื่ออ่าน'**
   String get tapToRead;
+
+  /// Ours (#19).
+  ///
+  /// In th, this message translates to:
+  /// **'💾 สำรองข้อมูล'**
+  String get backupTitle;
+
+  /// Ours (#19).
+  ///
+  /// In th, this message translates to:
+  /// **'ดาว ตารางเวร เคสที่นำเข้า และการตั้งค่า รวมไว้ในไฟล์เดียว ใช้ย้ายไปเครื่องใหม่หรือหลังติดตั้งแอปใหม่'**
+  String get backupSub;
+
+  /// Ours (#19).
+  ///
+  /// In th, this message translates to:
+  /// **'ส่งออกไฟล์สำรองข้อมูล'**
+  String get exportBackup;
+
+  /// Ours (#19).
+  ///
+  /// In th, this message translates to:
+  /// **'บันทึกไฟล์สำรองข้อมูลเรียบร้อย 💾'**
+  String get backupSaved;
+
+  /// Ours (#19).
+  ///
+  /// In th, this message translates to:
+  /// **'บันทึกไฟล์สำรองข้อมูลไม่สำเร็จ'**
+  String get backupFailed;
+
+  /// Ours (#19).
+  ///
+  /// In th, this message translates to:
+  /// **'กู้คืนจากไฟล์สำรองข้อมูล'**
+  String get restoreBackup;
+
+  /// Ours (#19).
+  ///
+  /// In th, this message translates to:
+  /// **'เกิดข้อผิดพลาดในการอ่านไฟล์'**
+  String get restoreReadError;
+
+  /// Ours (#19).
+  ///
+  /// In th, this message translates to:
+  /// **'ใช้ไฟล์สำรองข้อมูลนี้ไม่ได้'**
+  String get restoreBadTitle;
+
+  /// Ours (#19).
+  ///
+  /// In th, this message translates to:
+  /// **'กู้คืนข้อมูลจากไฟล์นี้?'**
+  String get restoreConfirmTitle;
+
+  /// Ours (#19). date: when the backup was made, as d/M/yyyy (Buddhist era) HH:mm.
+  ///
+  /// In th, this message translates to:
+  /// **'ดาว ตารางเวร เคสที่นำเข้า และการตั้งค่าในเครื่องนี้ จะถูกแทนที่ด้วยข้อมูลในไฟล์ที่บันทึกเมื่อ {date} ย้อนกลับไม่ได้'**
+  String restoreConfirmBody(String date);
+
+  /// Ours (#19).
+  ///
+  /// In th, this message translates to:
+  /// **'กู้คืน'**
+  String get restoreConfirm;
+
+  /// Ours (#19).
+  ///
+  /// In th, this message translates to:
+  /// **'กู้คืนข้อมูลเรียบร้อย ✅'**
+  String get restored;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

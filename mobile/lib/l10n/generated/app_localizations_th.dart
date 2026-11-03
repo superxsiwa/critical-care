@@ -649,4 +649,43 @@ class AppLocalizationsTh extends AppLocalizations {
 
   @override
   String get tapToRead => 'แตะเพื่ออ่าน';
+
+  @override
+  String get backupTitle => '💾 สำรองข้อมูล';
+
+  @override
+  String get backupSub =>
+      'ดาว ตารางเวร เคสที่นำเข้า และการตั้งค่า รวมไว้ในไฟล์เดียว ใช้ย้ายไปเครื่องใหม่หรือหลังติดตั้งแอปใหม่';
+
+  @override
+  String get exportBackup => 'ส่งออกไฟล์สำรองข้อมูล';
+
+  @override
+  String get backupSaved => 'บันทึกไฟล์สำรองข้อมูลเรียบร้อย 💾';
+
+  @override
+  String get backupFailed => 'บันทึกไฟล์สำรองข้อมูลไม่สำเร็จ';
+
+  @override
+  String get restoreBackup => 'กู้คืนจากไฟล์สำรองข้อมูล';
+
+  @override
+  String get restoreReadError => 'เกิดข้อผิดพลาดในการอ่านไฟล์';
+
+  @override
+  String get restoreBadTitle => 'ใช้ไฟล์สำรองข้อมูลนี้ไม่ได้';
+
+  @override
+  String get restoreConfirmTitle => 'กู้คืนข้อมูลจากไฟล์นี้?';
+
+  @override
+  String restoreConfirmBody(String date) {
+    return 'ดาว ตารางเวร เคสที่นำเข้า และการตั้งค่าในเครื่องนี้ จะถูกแทนที่ด้วยข้อมูลในไฟล์ที่บันทึกเมื่อ $date ย้อนกลับไม่ได้';
+  }
+
+  @override
+  String get restoreConfirm => 'กู้คืน';
+
+  @override
+  String get restored => 'กู้คืนข้อมูลเรียบร้อย ✅';
 }

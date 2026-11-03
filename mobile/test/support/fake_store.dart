@@ -1,4 +1,7 @@
+import 'dart:convert';
+
 import 'package:criticalcare/data/progress_store.dart';
+import 'package:criticalcare/game/backup.dart';
 import 'package:criticalcare/game/progress.dart';
 import 'package:criticalcare/game/roster.dart';
 
@@ -51,4 +54,13 @@ class MemoryProgressStore implements ProgressStore {
 
   @override
   Future<void> saveImportedCases(String? json) async => importedCases = json;
+
+  @override
+  Future<void> restore(PlayerData data) async {
+    progress = data.progress;
+    roster = data.roster;
+    final cases = data.importedCases;
+    importedCases = cases == null ? null : jsonEncode(cases);
+    settings = GameSettings(sound: data.sound, haptics: data.haptics);
+  }
 }
