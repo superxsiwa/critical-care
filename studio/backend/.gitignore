@@ -1,0 +1,4 @@
+internal/web/dist/*
+!internal/web/dist/README.txt
+/casestudio
+/data/

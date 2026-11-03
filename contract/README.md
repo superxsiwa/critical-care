@@ -6,8 +6,8 @@ the same way; the files in this folder are the agreement.
 | File | What |
 |---|---|
 | `case-package.v1.schema.json` | JSON Schema (draft 2020-12): the structure of a version 1 package |
-| `examples/valid/`, `examples/invalid/` | Example files: one change each from bed 01 for the invalid ones |
-| `examples/verdicts.json` | For every example: accepted or not, the beds it holds, the problem text a reader must report, and whether the schema alone catches it |
+| `examples/valid/`, `examples/invalid/` | Example files. `valid/minimal.json` is a small neutral fixture (placeholder text, not clinical content); each `invalid/rule-*.json` breaks one rule of it, the other invalid files change one thing in bed 01 |
+| `examples/verdicts.json` | For every example: accepted or not, the beds it holds, what a reader must report (`problems`: every line, word for word and in order; `problem`: a part of one line), and whether the schema alone catches it (`schema`: pass, fail, or skip for files without `format`) |
 
 ## The package, version 1
 
@@ -51,8 +51,11 @@ clinical reviewer's call; no reader judges it.
 
 - **App:** `mobile/test/contract/contract_test.dart` reads every example through the importer and checks
   the verdict; it also checks the valid examples and all 8 shipped cases against the schema.
-- **Studio:** its server runs the same `verdicts.json`, so both sides accept and refuse the same files with
-  the same problem texts.
+- **Studio:** its server (`studio/backend/internal/cases`) runs the same `verdicts.json`, so both sides
+  accept and refuse the same files with the same problem texts.
+- **Round trip:** `examples/valid/studio-export.json` is the studio's own export of `minimal.json`; the
+  studio's export test keeps it current (`go test ./internal/server -run TestExport -update`) and the app's
+  contract test must accept it.
 
 A change to the format raises `version`, adds a new schema file, and adds examples; older versions keep
 their examples and stay readable.

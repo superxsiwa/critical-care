@@ -1,0 +1,21 @@
+{
+  "format": "critical-care-cases",
+  "version": 1,
+  "cases": [
+    {
+      "bedNum": 9,
+      "bedCode": "TEST-09",
+      "patientName": "Fixture patient",
+      "patientAge": 50,
+      "caseTitle": "Contract fixture (not clinical content)",
+      "dxBadge": "Fixture",
+      "status": "stable",
+      "statusText": "Stable",
+      "doctorName": "Fixture doctor",
+      "doctorAvatar": "D",
+      "stayDuration": "Day 1",
+      "clinicalNote": "A test fixture for the case package contract; not clinical content.",
+      "stageData": {}
+    }
+  ]
+}

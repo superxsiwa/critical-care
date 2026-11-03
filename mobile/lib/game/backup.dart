@@ -81,7 +81,7 @@ BackupRead readBackup(String text, {bool Function(String img)? imageExists}) {
   }
   final Object? json;
   try {
-    json = jsonDecode(text.startsWith('﻿') ? text.substring(1) : text);
+    json = jsonDecode(text.startsWith('\uFEFF') ? text.substring(1) : text);
   } on FormatException catch (e) {
     return BackupRejected(['not JSON: ${e.message}']);
   }

@@ -80,5 +80,410 @@
     "problem": "this is a backup file, not a case file",
     "schema": "fail",
     "about": "The app's backup file picked by mistake"
+  },
+  {
+    "file": "valid/minimal.json",
+    "ok": true,
+    "beds": [
+      9
+    ],
+    "schema": "pass",
+    "about": "The smallest playable case: a neutral fixture, one of each task"
+  },
+  {
+    "file": "valid/studio-export.json",
+    "ok": true,
+    "beds": [
+      9
+    ],
+    "schema": "pass",
+    "about": "Written by the Case Studio's server (its export test keeps it current): the app must read what the studio exports"
+  },
+  {
+    "file": "invalid/rule-status-not-text.json",
+    "ok": false,
+    "problems": [
+      "case 1: $.status: expected text"
+    ],
+    "schema": "fail",
+    "about": "status is a number"
+  },
+  {
+    "file": "invalid/rule-status-unknown.json",
+    "ok": false,
+    "problems": [
+      "case 1: $.status: expected stable, alert or critical"
+    ],
+    "schema": "fail",
+    "about": "status is not stable, alert or critical"
+  },
+  {
+    "file": "invalid/rule-age-not-whole.json",
+    "ok": false,
+    "problems": [
+      "case 1: $.patientAge: expected a whole number"
+    ],
+    "schema": "fail",
+    "about": "patientAge is text"
+  },
+  {
+    "file": "invalid/rule-steps-not-list.json",
+    "ok": false,
+    "problems": [
+      "case 1: $.stageData: expected a list"
+    ],
+    "schema": "fail",
+    "about": "stageData is an object"
+  },
+  {
+    "file": "invalid/rule-step-id-bool.json",
+    "ok": false,
+    "problems": [
+      "case 1: $.stageData[0].id: expected a number or text"
+    ],
+    "schema": "fail",
+    "about": "A step id is true"
+  },
+  {
+    "file": "invalid/rule-hr-fraction.json",
+    "ok": false,
+    "problems": [
+      "case 1: $.stageData[0].vitals.hr: expected a whole number"
+    ],
+    "schema": "fail",
+    "about": "Heart rate 80.5"
+  },
+  {
+    "file": "invalid/rule-correct-not-bool.json",
+    "ok": false,
+    "problems": [
+      "case 1: $.stageData[0].choices1toN.options[0].correct: expected true or false"
+    ],
+    "schema": "fail",
+    "about": "An option says correct \"yes\""
+  },
+  {
+    "file": "invalid/rule-case-not-object.json",
+    "ok": false,
+    "problems": [
+      "case 1: expected an object"
+    ],
+    "schema": "fail",
+    "about": "The case is text"
+  },
+  {
+    "file": "invalid/rule-bedcode-blank.json",
+    "ok": false,
+    "problems": [
+      "case 1 (bed 9): $.bedCode: is empty"
+    ],
+    "schema": "fail",
+    "about": "bedCode is blank"
+  },
+  {
+    "file": "invalid/rule-seven-steps.json",
+    "ok": false,
+    "problems": [
+      "case 1 (bed 9): $.stageData: has 7 steps, expected 6"
+    ],
+    "schema": "fail",
+    "about": "A 7th step"
+  },
+  {
+    "file": "invalid/rule-step-id-twice.json",
+    "ok": false,
+    "problems": [
+      "case 1 (bed 9): $.stageData[1].id: step id 1 is used twice"
+    ],
+    "schema": "pass",
+    "about": "Steps 1 and 2 share id 1"
+  },
+  {
+    "file": "invalid/rule-reading-blank.json",
+    "ok": false,
+    "problems": [
+      "case 1 (bed 9): $.stageData[0].reading: is empty"
+    ],
+    "schema": "fail",
+    "about": "Step 1 reading is blank"
+  },
+  {
+    "file": "invalid/rule-hr-zero.json",
+    "ok": false,
+    "problems": [
+      "case 1 (bed 9): $.stageData[0].vitals.hr: must be above 0"
+    ],
+    "schema": "fail",
+    "about": "Heart rate 0"
+  },
+  {
+    "file": "invalid/rule-map-zero.json",
+    "ok": false,
+    "problems": [
+      "case 1 (bed 9): $.stageData[0].vitals.map: must be above 0"
+    ],
+    "schema": "fail",
+    "about": "MAP 0"
+  },
+  {
+    "file": "invalid/rule-bp-dash.json",
+    "ok": false,
+    "problems": [
+      "case 1 (bed 9): $.stageData[0].vitals.bp: \"120-80\" is not systolic/diastolic"
+    ],
+    "schema": "fail",
+    "about": "BP written 120-80"
+  },
+  {
+    "file": "invalid/rule-spo2-no-percent.json",
+    "ok": false,
+    "problems": [
+      "case 1 (bed 9): $.stageData[0].vitals.spo2: \"98\" is not a percentage"
+    ],
+    "schema": "fail",
+    "about": "SpO2 without %"
+  },
+  {
+    "file": "invalid/rule-two-pool-tasks.json",
+    "ok": false,
+    "problems": [
+      "case 1 (bed 9): $.stageData[0]: has sequenceTask and traysTask; a step can show one of them"
+    ],
+    "schema": "pass",
+    "about": "Step 1 has a sequence and a trays task"
+  },
+  {
+    "file": "invalid/rule-no-task.json",
+    "ok": false,
+    "problems": [
+      "case 1 (bed 9): $.stageData[3]: has no task"
+    ],
+    "schema": "pass",
+    "about": "Step 4 has no task"
+  },
+  {
+    "file": "invalid/rule-choices-prompt-blank.json",
+    "ok": false,
+    "problems": [
+      "case 1 (bed 9): $.stageData[0].choices1toN.prompt: is empty"
+    ],
+    "schema": "fail",
+    "about": "The choices prompt is blank"
+  },
+  {
+    "file": "invalid/rule-options-empty.json",
+    "ok": false,
+    "problems": [
+      "case 1 (bed 9): $.stageData[0].choices1toN.options: is empty"
+    ],
+    "schema": "fail",
+    "about": "No options"
+  },
+  {
+    "file": "invalid/rule-option-id-twice.json",
+    "ok": false,
+    "problems": [
+      "case 1 (bed 9): $.stageData[0].choices1toN.options: \"c1\" appears twice"
+    ],
+    "schema": "pass",
+    "about": "Two options with id c1"
+  },
+  {
+    "file": "invalid/rule-no-correct-option.json",
+    "ok": false,
+    "problems": [
+      "case 1 (bed 9): $.stageData[0].choices1toN.options: has no correct option"
+    ],
+    "schema": "pass",
+    "about": "No option is correct"
+  },
+  {
+    "file": "invalid/rule-pool-empty.json",
+    "ok": false,
+    "problems": [
+      "case 1 (bed 9): $.stageData[4].sequenceTask.pool: is empty",
+      "case 1 (bed 9): $.stageData[4].sequenceTask.correctOrder: \"q2\" is not in the pool",
+      "case 1 (bed 9): $.stageData[4].sequenceTask.correctOrder: \"q1\" is not in the pool"
+    ],
+    "schema": "fail",
+    "about": "Step 5 pool is empty"
+  },
+  {
+    "file": "invalid/rule-pool-id-twice.json",
+    "ok": false,
+    "problems": [
+      "case 1 (bed 9): $.stageData[4].sequenceTask.pool: \"q1\" appears twice",
+      "case 1 (bed 9): $.stageData[4].sequenceTask.correctOrder: \"q2\" is not in the pool"
+    ],
+    "schema": "pass",
+    "about": "Two pool cards with id q1"
+  },
+  {
+    "file": "invalid/rule-card-text-blank.json",
+    "ok": false,
+    "problems": [
+      "case 1 (bed 9): $.stageData[4].sequenceTask.pool[1].text: is empty"
+    ],
+    "schema": "fail",
+    "about": "A pool card has no text"
+  },
+  {
+    "file": "invalid/rule-img-not-bundled.json",
+    "ok": false,
+    "problems": [
+      "case 1 (bed 9): $.stageData[1].traysTask.pool[0].img: \"./assets/equipment/nope.png\" is not a bundled image"
+    ],
+    "schema": "pass",
+    "about": "A picture the app does not have"
+  },
+  {
+    "file": "invalid/rule-order-empty.json",
+    "ok": false,
+    "problems": [
+      "case 1 (bed 9): $.stageData[4].sequenceTask.correctOrder: is empty"
+    ],
+    "schema": "fail",
+    "about": "correctOrder is empty"
+  },
+  {
+    "file": "invalid/rule-order-id-twice.json",
+    "ok": false,
+    "problems": [
+      "case 1 (bed 9): $.stageData[4].sequenceTask.correctOrder: \"q1\" appears twice"
+    ],
+    "schema": "fail",
+    "about": "correctOrder names q1 twice"
+  },
+  {
+    "file": "invalid/rule-trays-empty.json",
+    "ok": false,
+    "problems": [
+      "case 1 (bed 9): $.stageData[1].traysTask.trays: is empty",
+      "case 1 (bed 9): $.stageData[1].traysTask.pool: \"e1\" belongs in no tray, so the step cannot be passed",
+      "case 1 (bed 9): $.stageData[1].traysTask.pool: \"e2\" belongs in no tray, so the step cannot be passed"
+    ],
+    "schema": "fail",
+    "about": "Step 2 has no trays"
+  },
+  {
+    "file": "invalid/rule-tray-id-twice.json",
+    "ok": false,
+    "problems": [
+      "case 1 (bed 9): $.stageData[1].traysTask.trays: \"t1\" appears twice"
+    ],
+    "schema": "pass",
+    "about": "Two trays with id t1"
+  },
+  {
+    "file": "invalid/rule-tray-no-expected-ids.json",
+    "ok": false,
+    "problems": [
+      "case 1 (bed 9): $.stageData[1].traysTask.trays[1]: has no expectedIds",
+      "case 1 (bed 9): $.stageData[1].traysTask.pool: \"e2\" belongs in no tray, so the step cannot be passed"
+    ],
+    "schema": "pass",
+    "about": "An unordered tray without expectedIds"
+  },
+  {
+    "file": "invalid/rule-tray-no-expected-order.json",
+    "ok": false,
+    "problems": [
+      "case 1 (bed 9): $.stageData[2].traysTask.trays[0]: has no expectedOrder",
+      "case 1 (bed 9): $.stageData[2].traysTask.pool: \"o1\" belongs in no tray, so the step cannot be passed",
+      "case 1 (bed 9): $.stageData[2].traysTask.pool: \"o2\" belongs in no tray, so the step cannot be passed"
+    ],
+    "schema": "pass",
+    "about": "An ordered tray without expectedOrder"
+  },
+  {
+    "file": "invalid/rule-tray-id-not-in-pool.json",
+    "ok": false,
+    "problems": [
+      "case 1 (bed 9): $.stageData[1].traysTask.trays[1].expectedIds: \"zz\" is not in the pool",
+      "case 1 (bed 9): $.stageData[1].traysTask.pool: \"e2\" belongs in no tray, so the step cannot be passed"
+    ],
+    "schema": "pass",
+    "about": "A tray expects a card not in the pool"
+  },
+  {
+    "file": "invalid/rule-card-in-two-trays.json",
+    "ok": false,
+    "problems": [
+      "case 1 (bed 9): $.stageData[1].traysTask.trays (all expected ids): \"e1\" appears twice"
+    ],
+    "schema": "pass",
+    "about": "Card e1 expected in both trays"
+  },
+  {
+    "file": "invalid/rule-card-in-no-tray.json",
+    "ok": false,
+    "problems": [
+      "case 1 (bed 9): $.stageData[1].traysTask.pool: \"e2\" belongs in no tray, so the step cannot be passed"
+    ],
+    "schema": "pass",
+    "about": "Card e2 belongs in no tray"
+  },
+  {
+    "file": "invalid/rule-drop-empty.json",
+    "ok": false,
+    "problems": [
+      "case 1 (bed 9): $.stageData[3].unorderedDropTask.expectedIds: is empty"
+    ],
+    "schema": "fail",
+    "about": "Step 4 expects no card"
+  },
+  {
+    "file": "invalid/rule-drop-id-twice.json",
+    "ok": false,
+    "problems": [
+      "case 1 (bed 9): $.stageData[3].unorderedDropTask.expectedIds: \"u1\" appears twice"
+    ],
+    "schema": "fail",
+    "about": "Step 4 expects u1 twice"
+  },
+  {
+    "file": "invalid/rule-drop-id-not-in-pool.json",
+    "ok": false,
+    "problems": [
+      "case 1 (bed 9): $.stageData[3].unorderedDropTask.expectedIds: \"u9\" is not in the pool"
+    ],
+    "schema": "pass",
+    "about": "Step 4 expects a card not in the pool"
+  },
+  {
+    "file": "invalid/rule-plain-empty-list.json",
+    "ok": false,
+    "problems": [
+      "expected a list of cases, or {\"cases\": [...]}"
+    ],
+    "schema": "skip",
+    "about": "A plain empty list"
+  },
+  {
+    "file": "invalid/rule-version-text.json",
+    "ok": false,
+    "problems": [
+      "version: expected a whole number from 1, found \"1\""
+    ],
+    "schema": "fail",
+    "about": "version is the text \"1\""
+  },
+  {
+    "file": "invalid/rule-version-missing.json",
+    "ok": false,
+    "problems": [
+      "version: expected a whole number from 1, found nothing"
+    ],
+    "schema": "fail",
+    "about": "No version"
+  },
+  {
+    "file": "invalid/rule-cases-not-list.json",
+    "ok": false,
+    "problems": [
+      "cases: expected a list of cases"
+    ],
+    "schema": "fail",
+    "about": "cases is an object"
   }
 ]

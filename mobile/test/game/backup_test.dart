@@ -52,6 +52,12 @@ void main() {
     expect((data.sound, data.haptics), (false, true));
   });
 
+  test('a file saved with a byte order mark still reads', () {
+    final text = '\uFEFF${jsonEncode(validBackup())}';
+    expect(text.codeUnitAt(0), 0xFEFF);
+    expect(readBackup(text), isA<BackupOk>());
+  });
+
   test('the file says what it is and which layout it has', () {
     final json = validBackup();
     expect(json['format'], 'critical-care-backup');
