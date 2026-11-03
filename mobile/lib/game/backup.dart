@@ -5,6 +5,9 @@ library;
 import 'dart:convert';
 
 import 'case_import.dart';
+import 'file_formats.dart';
+
+export 'file_formats.dart' show backupFormat, backupVersion;
 import 'progress.dart';
 import 'roster.dart';
 
@@ -27,13 +30,6 @@ class PlayerData {
   final bool sound;
   final bool haptics;
 }
-
-/// Names the file as ours, so another JSON file (a case file) is told apart.
-const backupFormat = 'critical-care-backup';
-
-/// The layout this app writes. A later layout gets a higher number; this app reads every
-/// version up to its own and refuses newer ones.
-const backupVersion = 1;
 
 /// Far above any real backup (all 8 shipped cases are about 140 KB).
 const maxBackupChars = 10 * 1024 * 1024;
@@ -89,7 +85,9 @@ BackupRead readBackup(String text, {bool Function(String img)? imageExists}) {
   } on FormatException catch (e) {
     return BackupRejected(['not JSON: ${e.message}']);
   }
-  if (json is List || (json is Map && json['format'] == null && json['cases'] is List)) {
+  if (json is List ||
+      (json is Map && json['format'] == null && json['cases'] is List) ||
+      (json is Map && json['format'] == casePackageFormat)) {
     return const BackupRejected(['this is a case file, not a backup: import it under the cases']);
   }
   if (json is! Map<String, Object?> || json['format'] != backupFormat) {

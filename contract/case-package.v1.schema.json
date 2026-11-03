@@ -1,0 +1,139 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/superxsiwa/critical-care/blob/master/contract/case-package.v1.schema.json",
+  "title": "Critical Care case package, version 1",
+  "description": "The file that carries cases from the Case Studio to the app. The case objects are the shape of BedCasePayload in backend/src/services/beds/types.ts. This schema checks the structure; the rules it cannot express are listed in contract/README.md and checked in code.",
+  "type": "object",
+  "required": ["format", "version", "cases"],
+  "properties": {
+    "format": { "const": "critical-care-cases" },
+    "version": { "const": 1 },
+    "exportedAt": { "type": "string", "format": "date-time" },
+    "cases": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/case" } }
+  },
+  "$defs": {
+    "nonBlank": { "type": "string", "pattern": "\\S" },
+    "optionalText": { "type": ["string", "null"] },
+    "ids": { "type": "array", "items": { "type": "string" }, "uniqueItems": true },
+    "case": {
+      "type": "object",
+      "required": [
+        "bedNum", "bedCode", "patientName", "caseTitle", "dxBadge", "status", "statusText",
+        "doctorName", "doctorAvatar", "stageData"
+      ],
+      "properties": {
+        "bedNum": { "type": "integer", "minimum": 1 },
+        "bedCode": { "$ref": "#/$defs/nonBlank" },
+        "patientName": { "$ref": "#/$defs/nonBlank" },
+        "patientAge": { "type": ["integer", "null"], "minimum": 0 },
+        "caseTitle": { "$ref": "#/$defs/nonBlank" },
+        "dxBadge": { "$ref": "#/$defs/nonBlank" },
+        "status": { "enum": ["stable", "alert", "critical"] },
+        "statusText": { "type": "string" },
+        "doctorName": { "$ref": "#/$defs/nonBlank" },
+        "doctorAvatar": { "type": "string" },
+        "stayDuration": { "$ref": "#/$defs/optionalText" },
+        "clinicalNote": { "$ref": "#/$defs/optionalText" },
+        "stageData": { "type": "array", "minItems": 6, "maxItems": 6, "items": { "$ref": "#/$defs/stage" } }
+      }
+    },
+    "stage": {
+      "type": "object",
+      "required": ["id", "name", "mechanic", "reading", "doctorSpeech", "vitals"],
+      "properties": {
+        "id": { "type": ["integer", "string"] },
+        "name": { "$ref": "#/$defs/nonBlank" },
+        "mechanic": { "type": "string" },
+        "reading": { "$ref": "#/$defs/nonBlank" },
+        "doctorSpeech": { "$ref": "#/$defs/nonBlank" },
+        "vitals": { "$ref": "#/$defs/vitals" },
+        "choices1toN": { "anyOf": [{ "$ref": "#/$defs/choices" }, { "type": "null" }] },
+        "sequenceTask": { "anyOf": [{ "$ref": "#/$defs/sequence" }, { "type": "null" }] },
+        "traysTask": { "anyOf": [{ "$ref": "#/$defs/trays" }, { "type": "null" }] },
+        "unorderedDropTask": { "anyOf": [{ "$ref": "#/$defs/unorderedDrop" }, { "type": "null" }] }
+      }
+    },
+    "vitals": {
+      "type": "object",
+      "required": ["hr", "bp", "spo2", "map"],
+      "properties": {
+        "hr": { "type": "integer", "minimum": 1 },
+        "bp": { "type": "string", "pattern": "^\\d{2,3}/\\d{2,3}$" },
+        "spo2": { "type": "string", "pattern": "^\\d{1,3}%$" },
+        "map": { "type": "integer", "minimum": 1 }
+      }
+    },
+    "poolItem": {
+      "type": "object",
+      "required": ["id", "text"],
+      "properties": {
+        "id": { "type": "string" },
+        "text": { "$ref": "#/$defs/nonBlank" },
+        "img": { "$ref": "#/$defs/optionalText" }
+      }
+    },
+    "pool": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/poolItem" } },
+    "choices": {
+      "type": "object",
+      "required": ["prompt", "options"],
+      "properties": {
+        "prompt": { "$ref": "#/$defs/nonBlank" },
+        "options": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "required": ["id", "text", "correct"],
+            "properties": {
+              "id": { "type": "string" },
+              "text": { "type": "string" },
+              "correct": { "type": "boolean" }
+            }
+          }
+        }
+      }
+    },
+    "sequence": {
+      "type": "object",
+      "required": ["prompt", "pool", "correctOrder"],
+      "properties": {
+        "prompt": { "$ref": "#/$defs/nonBlank" },
+        "pool": { "$ref": "#/$defs/pool" },
+        "correctOrder": { "$ref": "#/$defs/ids", "minItems": 1 }
+      }
+    },
+    "trays": {
+      "type": "object",
+      "required": ["ordered", "prompt", "trays", "pool"],
+      "properties": {
+        "ordered": { "type": "boolean" },
+        "prompt": { "$ref": "#/$defs/nonBlank" },
+        "pool": { "$ref": "#/$defs/pool" },
+        "trays": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "required": ["id", "name", "sterile"],
+            "properties": {
+              "id": { "type": "string" },
+              "name": { "type": "string" },
+              "sterile": { "type": "boolean" },
+              "expectedIds": { "$ref": "#/$defs/ids" },
+              "expectedOrder": { "$ref": "#/$defs/ids" }
+            }
+          }
+        }
+      }
+    },
+    "unorderedDrop": {
+      "type": "object",
+      "required": ["prompt", "expectedIds", "pool"],
+      "properties": {
+        "prompt": { "$ref": "#/$defs/nonBlank" },
+        "expectedIds": { "$ref": "#/$defs/ids", "minItems": 1 },
+        "pool": { "$ref": "#/$defs/pool" }
+      }
+    }
+  }
+}

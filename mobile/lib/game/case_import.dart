@@ -7,6 +7,7 @@ import 'dart:convert';
 
 import 'case_model.dart';
 import 'case_validation.dart';
+import 'file_formats.dart';
 
 sealed class CaseImport {
   const CaseImport();
@@ -27,8 +28,10 @@ class CasesRejected extends CaseImport {
   final List<String> problems;
 }
 
-/// Reads [text] like his importer: a list of cases, or an object with a `cases` list, a missing
-/// or unreadable `bedNum` taking the case's place in the list. Then every case must pass the same
+/// Reads [text]: a case package (`contract/README.md`: `format`, `version`, `cases`), or his
+/// format, a list of cases or an object with a `cases` list, where a missing or unreadable
+/// `bedNum` takes the case's place in the list. A package newer than this app, another named
+/// file (a backup) or an unknown format is refused. Then every case must pass the same
 /// checks as the cases shipped in the app ([imageExists] answers for equipment pictures); one
 /// bad case rejects the whole file, so the ward never holds a case that cannot be played.
 CaseImport readCaseFile(String text, {bool Function(String img)? imageExists}) {
@@ -38,6 +41,12 @@ CaseImport readCaseFile(String text, {bool Function(String img)? imageExists}) {
     decoded = jsonDecode(text.startsWith('\uFEFF') ? text.substring(1) : text);
   } on FormatException catch (e) {
     return CasesRejected(['not JSON: ${e.message}']);
+  }
+  if (decoded is Map<String, Object?> && decoded['format'] != null) {
+    if (_packageProblem(decoded) case final String problem) return CasesRejected([problem]);
+    if (decoded['cases'] case final List<Object?> l when l.isEmpty) {
+      return const CasesRejected(['cases: expected at least one case']);
+    }
   }
   final list = switch (decoded) {
     final List<Object?> l => l,
@@ -77,6 +86,25 @@ CaseImport readCaseFile(String text, {bool Function(String img)? imageExists}) {
   if (problems.isNotEmpty) return CasesRejected(problems);
   read.sort((a, b) => a.$1.bedNum.compareTo(b.$1.bedNum));
   return CasesRead([for (final (c, _) in read) c], [for (final (_, j) in read) j]);
+}
+
+/// Why a file that names its `format` cannot be read as a case package, or null when it can.
+String? _packageProblem(Map<String, Object?> file) {
+  final format = file['format'];
+  if (format == backupFormat) {
+    return 'this is a backup file, not a case file: restore it under the backup in settings';
+  }
+  if (format != casePackageFormat) return 'not a case package (format "$format")';
+  final version = file['version'];
+  if (version is! int || version < 1) {
+    return 'version: expected a whole number from 1, found ${version ?? 'nothing'}';
+  }
+  if (version > casePackageVersion) {
+    return 'made by a newer Case Studio (package version $version, this app reads up to '
+        '$casePackageVersion): update the app first';
+  }
+  if (file['cases'] is! List) return 'cases: expected a list of cases';
+  return null;
 }
 
 /// His `Number(c.bedNum) || i + 1`: a number or numeric text above zero, else null.

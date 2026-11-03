@@ -79,6 +79,14 @@ void main() {
         }),
         ['this is a case file, not a backup: import it under the cases'],
       );
+      expect(
+        problemsOf({
+          'format': 'critical-care-cases',
+          'version': 1,
+          'cases': [bedJson(1)],
+        }),
+        ['this is a case file, not a backup: import it under the cases'],
+      );
     });
 
     test('another JSON file', () {
