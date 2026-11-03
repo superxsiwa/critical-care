@@ -1,0 +1,111 @@
+@import 'tailwindcss';
+
+/* The app's own font (Google Sans, OFL, Thai + Latin, cut by mobile/tool/make_fonts.py) and palette
+   (mobile/lib/app/theme.dart), so the studio reads as part of the same product. */
+@font-face {
+  font-family: 'Google Sans';
+  font-weight: 400;
+  font-display: swap;
+  src: url('/fonts/GoogleSans-Regular.ttf') format('truetype');
+}
+@font-face {
+  font-family: 'Google Sans';
+  font-weight: 500;
+  font-display: swap;
+  src: url('/fonts/GoogleSans-Medium.ttf') format('truetype');
+}
+@font-face {
+  font-family: 'Google Sans';
+  font-weight: 600;
+  font-display: swap;
+  src: url('/fonts/GoogleSans-SemiBold.ttf') format('truetype');
+}
+
+@theme {
+  --font-sans: 'Google Sans', ui-sans-serif, system-ui, sans-serif;
+  --color-ink: #0f2742;
+  --color-ink-2: #44607a;
+  --color-ink-3: #516880;
+  --color-line: #dcecf7;
+  --color-line-2: #c9dcea;
+}
+
+html {
+  color-scheme: light;
+}
+body {
+  @apply bg-sky-50 text-ink antialiased;
+  font-family: var(--font-sans);
+}
+
+@layer components {
+  .card {
+    @apply rounded-xl border border-line bg-white shadow-xs;
+  }
+  .btn {
+    @apply inline-flex items-center justify-center gap-1.5 rounded-lg border border-line-2 bg-white px-3 py-1.5 text-sm font-medium text-ink
+           hover:bg-sky-50 active:bg-sky-100 disabled:cursor-not-allowed disabled:opacity-50 transition-colors;
+  }
+  .btn-primary {
+    @apply border-sky-700 bg-sky-700 text-white hover:bg-sky-800 active:bg-sky-900;
+  }
+  .btn-danger {
+    @apply border-rose-700 bg-white text-rose-700 hover:bg-rose-50;
+  }
+  .btn-ghost {
+    @apply border-transparent bg-transparent hover:bg-sky-100;
+  }
+  .btn-icon {
+    @apply h-8 w-8 px-0;
+  }
+  .input {
+    @apply block w-full rounded-lg border border-line-2 bg-white px-2.5 py-1.5 text-sm text-ink placeholder:text-ink-3
+           focus:border-sky-600 focus:outline-none focus:ring-2 focus:ring-sky-600/20;
+  }
+  .input[aria-invalid='true'] {
+    @apply border-rose-600 bg-rose-50/40;
+  }
+  /* Sized to the text (field-sizing), from one line; browsers without it show three rows. */
+  textarea.input {
+    @apply min-h-[2.4rem] leading-relaxed;
+  }
+  .label {
+    @apply mb-1 flex items-baseline gap-2 text-sm font-medium text-ink-2;
+  }
+  .key {
+    @apply font-mono text-[11px] font-normal text-ink-3;
+  }
+  .field-error {
+    @apply mt-1 block text-xs text-rose-700;
+  }
+  .section-title {
+    @apply text-base font-semibold text-ink;
+  }
+  .badge {
+    @apply inline-flex items-center gap-1 whitespace-nowrap rounded-full px-2 py-0.5 text-xs font-medium ring-1 ring-inset;
+  }
+  .badge-ok {
+    @apply bg-emerald-50 text-emerald-800 ring-emerald-600/30;
+  }
+  .badge-bad {
+    @apply bg-rose-50 text-rose-800 ring-rose-600/30;
+  }
+  .badge-plain {
+    @apply bg-sky-50 text-ink-2 ring-line-2;
+  }
+}
+
+/* The field a problem in the list leads to, for a moment. */
+.flash {
+  animation: flash 1.6s ease-out;
+  border-radius: 0.5rem;
+}
+@keyframes flash {
+  0%,
+  40% {
+    box-shadow: 0 0 0 3px rgb(2 132 199 / 0.45);
+  }
+  100% {
+    box-shadow: 0 0 0 3px rgb(2 132 199 / 0);
+  }
+}
