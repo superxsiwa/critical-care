@@ -6,16 +6,25 @@ import (
 	"io/fs"
 	"net/http"
 	"path"
+	"regexp"
 	"strings"
 )
 
 //go:embed all:dist
 var dist embed.FS
 
-// Handler serves the built app: hashed assets cached for good, index.html never cached, and any
-// path without a file extension answered with index.html (the app's own routes).
+// hashed names a file the build gave a content hash (main-VBRZTEYY.js): its name changes with its
+// content, so it may be cached for good. The app's pictures and fonts keep their names.
+var hashed = regexp.MustCompile(`-[A-Z0-9]{8}\.[a-z0-9]+$`)
+
+// Handler serves the built app: hashed assets cached for good, everything else checked again on
+// every use, and any path without a file extension answered with index.html (the app's own routes).
 func Handler() http.Handler {
 	files, _ := fs.Sub(dist, "dist")
+	return handler(files)
+}
+
+func handler(files fs.FS) http.Handler {
 	if _, err := fs.Stat(files, "index.html"); err != nil {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			w.Header().Set("Content-Type", "text/plain; charset=utf-8")
@@ -26,7 +35,7 @@ func Handler() http.Handler {
 	server := http.FileServerFS(files)
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		name := strings.TrimPrefix(path.Clean(r.URL.Path), "/")
-		if _, err := fs.Stat(files, name); name == "" || err != nil {
+		if info, err := fs.Stat(files, name); name == "" || err != nil || info.IsDir() {
 			if path.Ext(name) != "" {
 				http.NotFound(w, r)
 				return
@@ -35,10 +44,10 @@ func Handler() http.Handler {
 			http.ServeFileFS(w, r, files, "index.html")
 			return
 		}
-		if name == "index.html" {
-			w.Header().Set("Cache-Control", "no-cache")
-		} else {
+		if hashed.MatchString(name) {
 			w.Header().Set("Cache-Control", "public, max-age=31536000, immutable")
+		} else {
+			w.Header().Set("Cache-Control", "no-cache")
 		}
 		server.ServeHTTP(w, r)
 	})

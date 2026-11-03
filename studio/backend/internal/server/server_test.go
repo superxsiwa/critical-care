@@ -150,6 +150,17 @@ func TestDraftLifecycle(t *testing.T) {
 	if code, _ := call(t, srv, "GET", "/api/drafts/1", nil, &refusal); code != 404 || refusal.Code != "not-found" {
 		t.Fatalf("after delete: %d %+v", code, refusal)
 	}
+
+	// A deleted draft's id is never given out again: an editor still open on draft 1 (version 1)
+	// must not save over the next new draft.
+	var next draft
+	call(t, srv, "POST", "/api/drafts", map[string]any{"case": minimalCase(t)}, &next)
+	if next.ID == 1 {
+		t.Fatalf("a new draft took the deleted draft's id")
+	}
+	if code, _ := call(t, srv, "PUT", "/api/drafts/1", map[string]any{"version": 1, "case": broken}, &refusal); code != 404 {
+		t.Fatalf("save to the deleted draft: %d %+v", code, refusal)
+	}
 }
 
 func TestRequestsAreReadStrictly(t *testing.T) {
