@@ -13,9 +13,10 @@ import (
 //go:embed all:dist
 var dist embed.FS
 
-// hashed names a file the build gave a content hash (main-VBRZTEYY.js): its name changes with its
-// content, so it may be cached for good. The app's pictures and fonts keep their names.
-var hashed = regexp.MustCompile(`-[A-Z0-9]{8}\.[a-z0-9]+$`)
+// hashed names a file the build gave a content hash (main-VBRZTEYY.js, a lazy page's
+// chunk-Bb-Sh8tm.js): its name changes with its content, so it may be cached for good. The app's
+// pictures and fonts keep their names.
+var hashed = regexp.MustCompile(`^(?:[a-z]+-[A-Z0-9]{8}|chunk-[A-Za-z0-9_-]{8})\.(?:js|css)$`)
 
 // Handler serves the built app: hashed assets cached for good, everything else checked again on
 // every use, and any path without a file extension answered with index.html (the app's own routes).
@@ -44,7 +45,7 @@ func handler(files fs.FS) http.Handler {
 			http.ServeFileFS(w, r, files, "index.html")
 			return
 		}
-		if hashed.MatchString(name) {
+		if hashed.MatchString(path.Base(name)) {
 			w.Header().Set("Cache-Control", "public, max-age=31536000, immutable")
 		} else {
 			w.Header().Set("Cache-Control", "no-cache")

@@ -7,16 +7,18 @@ import (
 	"net/http"
 	"time"
 
+	"casestudio/internal/auth"
 	"casestudio/internal/drafts"
 	"casestudio/internal/httpx"
 	"casestudio/internal/web"
 )
 
-// Deps is what the server needs.
+// Deps is what the server needs. Secret signs the sessions (auth.LoadSecret).
 type Deps struct {
-	DB  *sql.DB
-	Log *slog.Logger
-	Now func() time.Time
+	DB     *sql.DB
+	Log    *slog.Logger
+	Now    func() time.Time
+	Secret []byte
 }
 
 // New builds the studio's HTTP handler.
@@ -25,10 +27,13 @@ func New(d Deps) http.Handler {
 		d.Now = time.Now
 	}
 	mux := http.NewServeMux()
+	signIn := auth.New(d.DB, d.Log, d.Secret, d.Now)
+	signIn.Mount(mux)
 	(&drafts.Service{DB: d.DB, Log: d.Log, Now: d.Now}).Mount(mux)
 	mux.HandleFunc("/api/", func(w http.ResponseWriter, r *http.Request) {
 		httpx.Refuse(w, http.StatusNotFound, "No such API route", "not-found")
 	})
 	mux.Handle("/", web.Handler())
-	return httpx.SecurityHeaders(httpx.Recover(d.Log, httpx.AccessLog(d.Log, mux)))
+	// Every /api request passes the guard: CSRF on writes, a signed-in caller, admins for /api/users.
+	return httpx.SecurityHeaders(httpx.Recover(d.Log, httpx.AccessLog(d.Log, signIn.Guard(mux))))
 }

@@ -1,7 +1,7 @@
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Service, inject } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
-import { Draft, DraftItem, JsonObject, Problem, Refusal } from './types';
+import { Account, Draft, JsonObject, Problem, Refusal } from './types';
 
 /** A refused request: the HTTP status and the server's body (status 0: the server did not answer). */
 export class ApiError extends Error {
@@ -32,10 +32,11 @@ function refusal(err: unknown): ApiError {
     detail: r.detail ?? err.message,
     code: r.code,
     problems: Array.isArray(r.problems) ? r.problems : undefined,
+    minutes: typeof r.minutes === 'number' ? r.minutes : undefined,
   });
 }
 
-async function call<T>(request: Promise<T>): Promise<T> {
+export async function call<T>(request: Promise<T>): Promise<T> {
   try {
     return await request;
   } catch (err) {
@@ -93,6 +94,26 @@ export class StudioApi {
       ),
     );
     return r.created;
+  }
+
+  /** An admin adds an account (nobody signs up). */
+  createUser(a: {
+    username: string;
+    name: string;
+    password: string;
+    admin: boolean;
+  }): Promise<Account> {
+    return call(firstValueFrom(this.http.post<Account>('/api/users', a)));
+  }
+
+  /** An admin changes an account's name, admin rights, or switches it on or off. */
+  updateUser(id: number, a: { name: string; admin: boolean; active: boolean }): Promise<Account> {
+    return call(firstValueFrom(this.http.put<Account>(`/api/users/${id}`, a)));
+  }
+
+  /** An admin sets a new password for an account; its sessions end. */
+  resetPassword(id: number, password: string): Promise<void> {
+    return call(firstValueFrom(this.http.put<void>(`/api/users/${id}/password`, { password })));
   }
 
   /** Every draft as one package, only if the app would accept it (else 422 with the problems). */

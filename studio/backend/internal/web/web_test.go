@@ -22,6 +22,7 @@ func TestServesTheBuiltApp(t *testing.T) {
 	h := handler(fstest.MapFS{
 		"index.html":                   {Data: []byte("<cs-root></cs-root>")},
 		"main-VBRZTEYY.js":             {Data: []byte("app")},
+		"chunk-Bb-Sh8tm.js":            {Data: []byte("page")},
 		"equipment/syringe.png":        {Data: []byte("png")},
 		"fonts/GoogleSans-Regular.ttf": {Data: []byte("ttf")},
 	})
@@ -31,6 +32,7 @@ func TestServesTheBuiltApp(t *testing.T) {
 		{"/", "200", "no-cache", "<cs-root>"},
 		{"/drafts/3", "200", "no-cache", "<cs-root>"}, // the app's own route
 		{"/main-VBRZTEYY.js", "200", "immutable", "app"},
+		{"/chunk-Bb-Sh8tm.js", "200", "immutable", "page"},   // a lazy page
 		{"/equipment/syringe.png", "200", "no-cache", "png"}, // keeps its name: checked again
 		{"/fonts/GoogleSans-Regular.ttf", "200", "no-cache", "ttf"},
 		{"/equipment", "200", "no-cache", "<cs-root>"}, // a folder is never listed

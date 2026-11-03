@@ -1,11 +1,12 @@
 import { httpResource } from '@angular/common/http';
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, computed, effect, inject, signal, untracked } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { MetaStore } from '../api/meta';
+import { Session } from '../api/session';
 import { ApiError, StudioApi } from '../api/studio-api';
 import { DraftItem } from '../api/types';
 import { blankCase } from '../case/blank';
-import { failure, formatTime } from '../editor/draft-editor.page';
+import { failure, formatTime } from '../ui/words';
 import { Confirm } from '../ui/confirm';
 import { Toasts } from '../ui/toast';
 
@@ -119,6 +120,9 @@ interface Refused {
                 </td>
                 <td class="whitespace-nowrap px-4 py-2.5 text-ink-2">
                   {{ time(d.updatedAt) }} · ฉบับที่ {{ d.version }}
+                  @if (d.updatedBy) {
+                    <span class="block text-xs">โดย {{ d.updatedBy }}</span>
+                  }
                 </td>
                 <td class="whitespace-nowrap px-4 py-2.5 text-right">
                   <button
@@ -159,6 +163,19 @@ export class DraftListPage {
   private readonly toasts = inject(Toasts);
 
   protected readonly drafts = httpResource<DraftItem[]>(() => '/api/drafts');
+
+  constructor() {
+    // Signed in again after the session ended: the list a refused request could not load.
+    const session = inject(Session);
+    let seen = untracked(session.signIns);
+    effect(() => {
+      const n = session.signIns();
+      if (n !== seen) {
+        seen = n;
+        untracked(() => this.drafts.reload());
+      }
+    });
+  }
   protected readonly items = computed(() => (this.drafts.hasValue() ? this.drafts.value() : []));
   protected readonly busy = signal(false);
   protected readonly refused = signal<Refused | null>(null);

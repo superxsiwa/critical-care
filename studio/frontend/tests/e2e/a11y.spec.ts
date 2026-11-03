@@ -38,3 +38,22 @@ test('every tab of the editor passes axe, with problems shown', async ({ page, s
   await expect(page.getByRole('dialog')).toBeVisible();
   expect(await violations(page)).toEqual([]);
 });
+
+test('sign-in, accounts and password pass axe', async ({ page, browser, studio }) => {
+  await studio.addUser('anna', 'อาจารย์แอนนา', 'anna-password-1');
+  await page.goto('/users');
+  await expect(page.getByRole('row')).toHaveCount(3);
+  await page.getByRole('button', { name: 'เพิ่มบัญชี' }).click(); // the fields' errors shown
+  await expect(page.getByText('ใส่ชื่อผู้ใช้')).toBeVisible();
+  expect(await violations(page), 'accounts').toEqual([]);
+  await page.goto('/password');
+  await page.getByRole('button', { name: 'เปลี่ยนรหัสผ่าน' }).click();
+  expect(await violations(page), 'password').toEqual([]);
+  const out = await browser.newContext({ baseURL: studio.url });
+  const signedOut = await out.newPage();
+  await signedOut.goto('/');
+  await signedOut.getByRole('button', { name: 'เข้าสู่ระบบ' }).click();
+  await expect(signedOut.getByText('ใส่ชื่อผู้ใช้')).toBeVisible();
+  expect(await violations(signedOut), 'sign-in').toEqual([]);
+  await out.close();
+});

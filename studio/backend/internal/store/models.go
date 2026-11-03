@@ -16,4 +16,17 @@ type Draft struct {
 	Version   int64
 	CreatedAt string
 	UpdatedAt string
+	CreatedBy sql.NullInt64
+	UpdatedBy sql.NullInt64
+}
+
+type User struct {
+	ID           int64
+	Username     string
+	Name         string
+	PasswordHash string
+	Admin        bool
+	Active       bool
+	CreatedAt    string
+	UpdatedAt    string
 }

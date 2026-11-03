@@ -27,6 +27,8 @@ export interface DraftItem {
   caseTitle: string;
   version: number;
   updatedAt: string;
+  /** Who saved it last ("" for a draft from before sign-in). Drafts are shared by every instructor. */
+  updatedBy: string;
   problems: number;
 }
 
@@ -35,6 +37,7 @@ export interface Draft {
   id: number;
   version: number;
   updatedAt: string;
+  updatedBy: string;
   case: JsonObject;
   problems: Problem[];
 }
@@ -44,4 +47,20 @@ export interface Refusal {
   detail: string;
   code?: string;
   problems?: string[];
+  /** How long to wait (a throttled sign-in). */
+  minutes?: number;
+}
+
+/** The signed-in person. */
+export interface Me {
+  id: number;
+  username: string;
+  name: string;
+  admin: boolean;
+}
+
+/** An account, as an admin sees it. */
+export interface Account extends Me {
+  active: boolean;
+  createdAt: string;
 }

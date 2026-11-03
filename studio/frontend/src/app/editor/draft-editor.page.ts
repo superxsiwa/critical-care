@@ -16,6 +16,7 @@ import { blankStep, nextStepId } from '../case/blank';
 import { anchorOf, asText, isObject, isWithin, listAt } from '../case/json';
 import { describePath, stepOf } from '../case/where';
 import { Confirm } from '../ui/confirm';
+import { failure, formatTime } from '../ui/words';
 import { Toasts } from '../ui/toast';
 import { CaseEditor } from './case-editor';
 import { CaseFields } from './case-fields';
@@ -65,6 +66,9 @@ const CHECK_AFTER_MS = 350;
             </h1>
             <p class="text-xs text-ink-3">
               ฉบับที่ {{ version() }} · บันทึกล่าสุด {{ savedAt() }}
+              @if (updatedBy()) {
+                โดย {{ updatedBy() }}
+              }
               @if (dirty()) {
                 · <span class="font-medium text-amber-700">มีการแก้ไขที่ยังไม่บันทึก</span>
               }
@@ -247,6 +251,7 @@ export class DraftEditorPage {
   protected readonly failed = signal('');
   protected readonly version = signal(0);
   private readonly updatedAt = signal('');
+  protected readonly updatedBy = signal('');
   /** The case as last saved (or loaded): what "unsaved changes" compares with. */
   private readonly savedJson = signal('');
   protected readonly saving = signal(false);
@@ -327,6 +332,7 @@ export class DraftEditorPage {
       this.savedJson.set(json);
       this.version.set(d.version);
       this.updatedAt.set(d.updatedAt);
+      this.updatedBy.set(d.updatedBy);
       this.stale.set(false);
       this.gone.set(false);
       this.loaded.set(true);
@@ -360,6 +366,7 @@ export class DraftEditorPage {
       const d = await this.api.save(Number(this.id()), this.version(), doc);
       this.version.set(d.version);
       this.updatedAt.set(d.updatedAt);
+      this.updatedBy.set(d.updatedBy);
       this.savedJson.set(JSON.stringify(doc));
       if (this.editor.doc() === doc) {
         this.checkSeq++;
@@ -513,19 +520,4 @@ function focusPlace(anchor: string): void {
   target.focus({ preventScroll: true });
   best.classList.add('flash');
   setTimeout(() => best?.classList.remove('flash'), 1600);
-}
-
-export function formatTime(iso: string): string {
-  const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return '';
-  return new Intl.DateTimeFormat('th-TH', { dateStyle: 'medium', timeStyle: 'short' }).format(d);
-}
-
-/** A refusal in words: Thai for what the screen knows, the server's own text otherwise. */
-export function failure(e: unknown): string {
-  if (e instanceof ApiError) {
-    if (e.status === 0) return 'เชื่อมต่อเซิร์ฟเวอร์ไม่ได้';
-    return e.body.detail;
-  }
-  return String(e);
 }

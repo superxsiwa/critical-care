@@ -14,6 +14,7 @@ import (
 	"strconv"
 	"time"
 
+	"casestudio/internal/auth"
 	"casestudio/internal/cases"
 	"casestudio/internal/httpx"
 	"casestudio/internal/store"
@@ -46,13 +47,15 @@ func (s *Service) Mount(mux *http.ServeMux) {
 	mux.HandleFunc("GET /api/package", s.exportPackage)
 }
 
-// Item is a draft in the list.
+// Item is a draft in the list. Drafts are shared by every instructor; updatedBy names who saved last
+// ("" for a draft from before sign-in).
 type Item struct {
 	ID        int64  `json:"id"`
 	BedNum    *int   `json:"bedNum"`
 	CaseTitle string `json:"caseTitle"`
 	Version   int64  `json:"version"`
 	UpdatedAt string `json:"updatedAt"`
+	UpdatedBy string `json:"updatedBy"`
 	Problems  int    `json:"problems"`
 }
 
@@ -61,12 +64,21 @@ type Draft struct {
 	ID        int64           `json:"id"`
 	Version   int64           `json:"version"`
 	UpdatedAt string          `json:"updatedAt"`
+	UpdatedBy string          `json:"updatedBy"`
 	Case      json.RawMessage `json:"case"`
 	Problems  []cases.Issue   `json:"problems"`
 }
 
-func toDraft(d store.Draft) Draft {
-	return Draft{d.ID, d.Version, d.UpdatedAt, json.RawMessage(d.Body), cases.CheckCase(json.RawMessage(d.Body))}
+func toDraft(d store.GetDraftRow) Draft {
+	return Draft{d.ID, d.Version, d.UpdatedAt, d.UpdatedByName, json.RawMessage(d.Body), cases.CheckCase(json.RawMessage(d.Body))}
+}
+
+// by is the signed-in caller's id, for created_by and updated_by.
+func by(r *http.Request) sql.NullInt64 {
+	if u := auth.FromContext(r.Context()); u != nil {
+		return sql.NullInt64{Int64: u.ID, Valid: true}
+	}
+	return sql.NullInt64{}
 }
 
 func (s *Service) meta(w http.ResponseWriter, r *http.Request) {
@@ -87,7 +99,7 @@ func (s *Service) list(w http.ResponseWriter, r *http.Request) {
 	items := make([]Item, len(rows))
 	for i, d := range rows {
 		bed, title := cases.Summary(json.RawMessage(d.Body))
-		items[i] = Item{d.ID, bed, title, d.Version, d.UpdatedAt, len(cases.CheckCase(json.RawMessage(d.Body)))}
+		items[i] = Item{d.ID, bed, title, d.Version, d.UpdatedAt, d.UpdatedByName, len(cases.CheckCase(json.RawMessage(d.Body)))}
 	}
 	httpx.JSON(w, http.StatusOK, items)
 }
@@ -134,9 +146,19 @@ func nullBed(raw json.RawMessage) (sql.NullInt64, string) {
 	return sql.NullInt64{Int64: int64(*bed), Valid: true}, title
 }
 
-func (s *Service) insert(ctx context.Context, q *store.Queries, raw json.RawMessage) (store.Draft, error) {
+func (s *Service) insert(ctx context.Context, q *store.Queries, raw json.RawMessage, user sql.NullInt64) (int64, error) {
 	bed, title := nullBed(raw)
-	return q.CreateDraft(ctx, store.CreateDraftParams{Body: string(raw), BedNum: bed, CaseTitle: title, Now: s.now()})
+	return q.CreateDraft(ctx, store.CreateDraftParams{Body: string(raw), BedNum: bed, CaseTitle: title, Now: s.now(), UserID: user})
+}
+
+// answer reads draft id back and answers it with status.
+func (s *Service) answer(w http.ResponseWriter, r *http.Request, status int, id int64) {
+	d, err := s.q().GetDraft(r.Context(), id)
+	if err != nil {
+		httpx.Fail(w, s.Log, err)
+		return
+	}
+	httpx.JSON(w, status, toDraft(d))
 }
 
 func (s *Service) create(w http.ResponseWriter, r *http.Request) {
@@ -144,12 +166,12 @@ func (s *Service) create(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
-	d, err := s.insert(r.Context(), s.q(), raw)
+	id, err := s.insert(r.Context(), s.q(), raw, by(r))
 	if err != nil {
 		httpx.Fail(w, s.Log, err)
 		return
 	}
-	httpx.JSON(w, http.StatusCreated, toDraft(d))
+	s.answer(w, r, http.StatusCreated, id)
 }
 
 func pathID(w http.ResponseWriter, r *http.Request) (int64, bool) {
@@ -203,18 +225,18 @@ func (s *Service) update(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	bed, title := nullBed(raw)
-	d, err := s.q().UpdateDraft(r.Context(), store.UpdateDraftParams{
-		Body: string(raw), BedNum: bed, CaseTitle: title, Now: s.now(), ID: id, Version: version,
+	n, err := s.q().UpdateDraft(r.Context(), store.UpdateDraftParams{
+		Body: string(raw), BedNum: bed, CaseTitle: title, Now: s.now(), UserID: by(r), ID: id, Version: version,
 	})
-	if errors.Is(err, sql.ErrNoRows) {
-		s.stale(w, r, id)
-		return
-	}
 	if err != nil {
 		httpx.Fail(w, s.Log, err)
 		return
 	}
-	httpx.JSON(w, http.StatusOK, toDraft(d))
+	if n == 0 {
+		s.stale(w, r, id)
+		return
+	}
+	s.answer(w, r, http.StatusOK, id)
 }
 
 func (s *Service) remove(w http.ResponseWriter, r *http.Request) {
@@ -276,12 +298,12 @@ func (s *Service) importFile(w http.ResponseWriter, r *http.Request) {
 			httpx.Fail(w, s.Log, err)
 			return
 		}
-		d, err := s.insert(r.Context(), q, compact.Bytes())
+		id, err := s.insert(r.Context(), q, compact.Bytes(), by(r))
 		if err != nil {
 			httpx.Fail(w, s.Log, err)
 			return
 		}
-		ids = append(ids, d.ID)
+		ids = append(ids, id)
 	}
 	if err := tx.Commit(); err != nil {
 		httpx.Fail(w, s.Log, err)
