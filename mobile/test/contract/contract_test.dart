@@ -41,11 +41,17 @@ void main() {
         expect([for (final c in (read as CasesRead).cases) c.bedNum], v['beds']);
       } else {
         expect(read, isA<CasesRejected>());
-        expect(
-          (read as CasesRejected).problems,
-          contains(contains(v['problem'] as String)),
-          reason: 'the contract says the problem reads "${v['problem']}"',
-        );
+        final problems = (read as CasesRejected).problems;
+        if (v['problems'] case final List<Object?> exact) {
+          // Every line, word for word and in order: the Case Studio must say the same.
+          expect(problems, exact);
+        } else {
+          expect(
+            problems,
+            contains(contains(v['problem'] as String)),
+            reason: 'the contract says the problem reads "${v['problem']}"',
+          );
+        }
       }
     });
 

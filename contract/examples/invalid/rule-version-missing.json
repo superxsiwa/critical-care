@@ -1,0 +1,239 @@
+{
+  "format": "critical-care-cases",
+  "cases": [
+    {
+      "bedNum": 9,
+      "bedCode": "TEST-09",
+      "patientName": "Fixture patient",
+      "patientAge": 50,
+      "caseTitle": "Contract fixture (not clinical content)",
+      "dxBadge": "Fixture",
+      "status": "stable",
+      "statusText": "Stable",
+      "doctorName": "Fixture doctor",
+      "doctorAvatar": "D",
+      "stayDuration": "Day 1",
+      "clinicalNote": "A test fixture for the case package contract; not clinical content.",
+      "stageData": [
+        {
+          "id": 1,
+          "name": "Step 1",
+          "mechanic": "fixture",
+          "reading": "Reading 1",
+          "doctorSpeech": "Doctor line 1",
+          "vitals": {
+            "hr": 80,
+            "bp": "120/80",
+            "spo2": "98%",
+            "map": 93
+          },
+          "choices1toN": {
+            "prompt": "Pick the right ones",
+            "options": [
+              {
+                "id": "c1",
+                "text": "Option 1",
+                "correct": true
+              },
+              {
+                "id": "c2",
+                "text": "Option 2",
+                "correct": false
+              }
+            ]
+          },
+          "sequenceTask": {
+            "prompt": "Put in order",
+            "pool": [
+              {
+                "id": "s1",
+                "text": "Card s1"
+              },
+              {
+                "id": "s2",
+                "text": "Card s2"
+              }
+            ],
+            "correctOrder": [
+              "s1",
+              "s2"
+            ]
+          }
+        },
+        {
+          "id": 2,
+          "name": "Step 2",
+          "mechanic": "fixture",
+          "reading": "Reading 2",
+          "doctorSpeech": "Doctor line 2",
+          "vitals": {
+            "hr": 80,
+            "bp": "120/80",
+            "spo2": "98%",
+            "map": 93
+          },
+          "traysTask": {
+            "ordered": false,
+            "prompt": "Sort into trays",
+            "trays": [
+              {
+                "id": "t1",
+                "name": "🟩 Tray A",
+                "sterile": true,
+                "expectedIds": [
+                  "e1"
+                ]
+              },
+              {
+                "id": "t2",
+                "name": "Tray B",
+                "sterile": false,
+                "expectedIds": [
+                  "e2"
+                ]
+              }
+            ],
+            "pool": [
+              {
+                "id": "e1",
+                "text": "Card e1",
+                "img": "./assets/equipment/syringe.png"
+              },
+              {
+                "id": "e2",
+                "text": "Card e2"
+              }
+            ]
+          }
+        },
+        {
+          "id": 3,
+          "name": "Step 3",
+          "mechanic": "fixture",
+          "reading": "Reading 3",
+          "doctorSpeech": "Doctor line 3",
+          "vitals": {
+            "hr": 80,
+            "bp": "120/80",
+            "spo2": "98%",
+            "map": 93
+          },
+          "traysTask": {
+            "ordered": true,
+            "prompt": "Hand over in order",
+            "trays": [
+              {
+                "id": "t1",
+                "name": "Tray",
+                "sterile": true,
+                "expectedOrder": [
+                  "o1",
+                  "o2"
+                ]
+              }
+            ],
+            "pool": [
+              {
+                "id": "o1",
+                "text": "Card o1"
+              },
+              {
+                "id": "o2",
+                "text": "Card o2"
+              }
+            ]
+          }
+        },
+        {
+          "id": 4,
+          "name": "Step 4",
+          "mechanic": "fixture",
+          "reading": "Reading 4",
+          "doctorSpeech": "Doctor line 4",
+          "vitals": {
+            "hr": 80,
+            "bp": "120/80",
+            "spo2": "98%",
+            "map": 93
+          },
+          "unorderedDropTask": {
+            "prompt": "Pick the safe actions",
+            "expectedIds": [
+              "u1"
+            ],
+            "pool": [
+              {
+                "id": "u1",
+                "text": "Card u1"
+              },
+              {
+                "id": "u2",
+                "text": "Card u2"
+              }
+            ]
+          }
+        },
+        {
+          "id": 5,
+          "name": "Step 5",
+          "mechanic": "fixture",
+          "reading": "Reading 5",
+          "doctorSpeech": "Doctor line 5",
+          "vitals": {
+            "hr": 80,
+            "bp": "120/80",
+            "spo2": "98%",
+            "map": 93
+          },
+          "sequenceTask": {
+            "prompt": "Put in order",
+            "pool": [
+              {
+                "id": "q1",
+                "text": "Card q1"
+              },
+              {
+                "id": "q2",
+                "text": "Card q2"
+              }
+            ],
+            "correctOrder": [
+              "q2",
+              "q1"
+            ]
+          }
+        },
+        {
+          "id": 6,
+          "name": "Step 6",
+          "mechanic": "fixture",
+          "reading": "Reading 6",
+          "doctorSpeech": "Doctor line 6",
+          "vitals": {
+            "hr": 80,
+            "bp": "120/80",
+            "spo2": "98%",
+            "map": 93
+          },
+          "sequenceTask": {
+            "prompt": "Handover in order",
+            "pool": [
+              {
+                "id": "h1",
+                "text": "Card h1"
+              },
+              {
+                "id": "h2",
+                "text": "Card h2"
+              }
+            ],
+            "correctOrder": [
+              "h1",
+              "h2"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

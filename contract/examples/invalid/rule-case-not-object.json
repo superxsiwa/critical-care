@@ -1,0 +1,7 @@
+{
+  "format": "critical-care-cases",
+  "version": 1,
+  "cases": [
+    "bed 9"
+  ]
+}

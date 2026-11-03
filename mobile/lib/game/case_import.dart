@@ -97,7 +97,12 @@ String? _packageProblem(Map<String, Object?> file) {
   if (format != casePackageFormat) return 'not a case package (format "$format")';
   final version = file['version'];
   if (version is! int || version < 1) {
-    return 'version: expected a whole number from 1, found ${version ?? 'nothing'}';
+    final found = switch (version) {
+      null => 'nothing',
+      String s => '"$s"',
+      _ => '$version',
+    };
+    return 'version: expected a whole number from 1, found $found';
   }
   if (version > casePackageVersion) {
     return 'made by a newer Case Studio (package version $version, this app reads up to '
