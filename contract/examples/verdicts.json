@@ -1,0 +1,84 @@
+[
+  {
+    "file": "valid/package-two-beds.json",
+    "ok": true,
+    "beds": [
+      1,
+      2
+    ],
+    "schema": "pass",
+    "about": "A version 1 package with beds 02 and 01; the app sorts them by bed number"
+  },
+  {
+    "file": "valid/plain-list.json",
+    "ok": true,
+    "beds": [
+      1
+    ],
+    "schema": "skip",
+    "about": "The older format the app and his React app export: a plain list of cases (no format, no version)"
+  },
+  {
+    "file": "invalid/five-steps.json",
+    "ok": false,
+    "problem": "has 5 steps, expected 6",
+    "schema": "fail",
+    "about": "The last of the 6 steps removed"
+  },
+  {
+    "file": "invalid/id-not-in-pool.json",
+    "ok": false,
+    "problem": "\"nope\" is not in the pool",
+    "schema": "pass",
+    "about": "Step 1 sequenceTask.correctOrder names a card that is not in its pool"
+  },
+  {
+    "file": "invalid/spo2-over-100.json",
+    "ok": false,
+    "problem": "\"101%\" is not a percentage",
+    "schema": "pass",
+    "about": "SpO2 above 100% on step 1"
+  },
+  {
+    "file": "invalid/title-not-text.json",
+    "ok": false,
+    "problem": "expected text",
+    "schema": "fail",
+    "about": "caseTitle is a number"
+  },
+  {
+    "file": "invalid/bed-twice.json",
+    "ok": false,
+    "problem": "bed 1 is in the file twice",
+    "schema": "pass",
+    "about": "Two cases with bed number 1"
+  },
+  {
+    "file": "invalid/no-cases.json",
+    "ok": false,
+    "problem": "expected at least one case",
+    "schema": "fail",
+    "about": "An empty cases list"
+  },
+  {
+    "file": "invalid/newer-version.json",
+    "ok": false,
+    "problem": "update the app first",
+    "schema": "fail",
+    "about": "Package version 2, newer than this contract"
+  },
+  {
+    "file": "invalid/other-format.json",
+    "ok": false,
+    "problem": "not a case package",
+    "schema": "fail",
+    "about": "An unknown format name"
+  },
+  {
+    "file": "invalid/backup-file.json",
+    "ok": false,
+    "problem": "this is a backup file, not a case file",
+    "schema": "fail",
+    "about": "The app's backup file picked by mistake"
+  }
+]

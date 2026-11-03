@@ -20,6 +20,7 @@ Offline: no server, no accounts, no network calls, no analytics.
 | `drift_schemas/` | A frozen copy of every database schema version |
 | `web/sqlite3.wasm`, `web/drift_worker.js` | SQLite for the web build, from the releases matching `pubspec.lock` (sqlite3 3.8.0, drift 2.35.3) |
 | `tool/convert_cases.mjs` | Writes the case JSON; `--check` reports drift from the `.ts` files |
+| `../contract/` | The case package the Case Studio exports and the app imports: schema, examples, verdicts (`test/contract/`) |
 
 ## Commands
 
