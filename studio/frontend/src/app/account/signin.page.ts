@@ -11,7 +11,7 @@ import { SignInForm } from './signin-form';
       <section class="card p-6" aria-labelledby="signin-title">
         <h1 id="signin-title" class="text-lg font-semibold">เข้าสู่ระบบ Case Studio</h1>
         <p class="mt-1 mb-4 text-sm text-ink-2">
-          สำหรับอาจารย์ผู้เขียนเคส บัญชีสร้างโดยผู้ดูแลระบบ
+          สำหรับผู้ใช้งาน 2 ประเภท: 1. Admin 2. พยาบาล (บัญชีสร้างโดย Admin)
         </p>
         <cs-signin-form (signedIn)="go()" />
       </section>

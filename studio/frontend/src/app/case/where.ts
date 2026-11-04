@@ -73,3 +73,22 @@ export function stepOf(path: string): number | null {
   const m = /^\$\.stageData\[(\d+)\]/.exec(path);
   return m ? Number(m[1]) : null;
 }
+
+/** A friendly Thai explanation for server validation problem messages. */
+export function friendlyMessage(msg: string): string {
+  if (msg === 'is empty') return 'ยังไม่มีข้อมูล';
+  if (msg === 'has no task') return 'ขั้นตอนนี้ยังไม่มีงาน (ต้องเลือกอย่างน้อย 1 รูปแบบ)';
+  if (msg === 'has no correct option') return 'ต้องมีตัวเลือกที่ถูกต้องอย่างน้อย 1 ข้อ';
+  if (msg === 'must be 1 or more' || msg === 'must be above 0') return 'ต้องมากกว่า 0';
+  if (msg === 'must not be blank') return 'ช่องนี้จำเป็นต้องกรอก';
+  if (msg.includes('is not systolic/diastolic'))
+    return 'ต้องอยู่ในรูปแบบ systolic/diastolic เช่น 120/80';
+  if (msg.includes('is not a percentage')) return 'ต้องระบุเป็น % เช่น 98% (ไม่เกิน 100%)';
+  if (msg.includes('belongs in no tray'))
+    return 'การ์ดนี้ไม่ได้อยู่ในถาดใดเลย ทำให้ไม่สามารถผ่านขั้นตอนนี้ได้';
+  if (msg.includes('is used twice')) return 'รหัสนี้ซ้ำกับรายการอื่น';
+  if (msg.includes('is not in the pool')) return 'รหัสนี้ไม่มีอยู่ในการ์ดที่เตรียมไว้';
+  if (msg.includes('is not an equipment image')) return 'รูปอุปกรณ์ต้องเลือกจากรายการที่มีในแอป';
+  if (msg.includes('has') && msg.includes('steps, expected')) return 'เคสต้องมีครบ 6 ขั้นตอน';
+  return msg;
+}

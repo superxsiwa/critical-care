@@ -1,6 +1,7 @@
 import { Component, Directive, computed, inject, input } from '@angular/core';
 import { Json, Problem } from '../api/types';
 import { Path, asText, pathText } from '../case/json';
+import { friendlyMessage } from '../case/where';
 import { CaseEditor, fieldId } from './case-editor';
 
 /** A field's problems, under it. The texts are the server's (English, the app's own words). */
@@ -8,9 +9,14 @@ import { CaseEditor, fieldId } from './case-editor';
   selector: 'cs-errors',
   template: `
     @if (problems().length) {
-      <ul [id]="listId()" class="mt-1 space-y-0.5" lang="en">
+      <ul [id]="listId()" class="mt-1 space-y-0.5">
         @for (p of problems(); track $index) {
-          <li class="field-error mt-0">{{ p.message }}</li>
+          <li class="field-error mt-0">
+            {{ friendly(p.message) }}
+            @if (friendly(p.message) !== p.message) {
+              <span class="text-xs text-rose-500 font-normal"> ({{ p.message }})</span>
+            }
+          </li>
         }
       </ul>
     }
@@ -19,6 +25,7 @@ import { CaseEditor, fieldId } from './case-editor';
 export class Errors {
   readonly problems = input.required<Problem[]>();
   readonly listId = input<string>();
+  protected readonly friendly = friendlyMessage;
 }
 
 /** The problems that belong to a place with no field of its own (a list, a step, a task). */

@@ -61,7 +61,7 @@ test.describe('signed out', () => {
     await expect(handed).toHaveText(/^[a-z2-9]{14}$/);
     const password = (await handed.textContent())!;
     const row = page.getByRole('row', { name: /anna/ });
-    await expect(row).toContainText('อาจารย์');
+    await expect(row).toContainText('พยาบาล');
     await expect(row).toContainText('ใช้งาน');
     // The same username again (in other letters) is refused on its field.
     await form.getByLabel('ชื่อผู้ใช้ (ใช้เข้าสู่ระบบ)').fill('ANNA');

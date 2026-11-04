@@ -27,7 +27,7 @@ const USERNAME = /^[A-Za-z0-9._-]{2,40}$/;
   template: `
     <h1 class="text-xl font-semibold">บัญชีผู้ใช้</h1>
     <p class="text-sm text-ink-2">
-      อาจารย์ทุกคนเห็นและแก้ไขเคสชุดเดียวกัน ผู้ดูแลระบบเพิ่มบัญชีและตั้งรหัสผ่านให้
+      ระบบ Case Studio มีผู้ใช้ 2 ประเภท: 1. Admin (ผู้ดูแลระบบ) 2. พยาบาล
     </p>
 
     <section class="card mt-4 p-4" aria-labelledby="add-title">
@@ -59,11 +59,32 @@ const USERNAME = /^[A-Za-z0-9._-]{2,40}$/;
             }
           </div>
         }
-        <div class="flex flex-col justify-between gap-2 md:pt-6">
-          <label class="inline-flex items-center gap-2 text-sm">
-            <input type="checkbox" class="h-4 w-4 accent-sky-700" [formField]="f.admin" />
-            ผู้ดูแลระบบ
-          </label>
+        <div class="flex flex-col justify-between gap-2 md:pt-1">
+          <div>
+            <span class="label">ประเภทผู้ใช้</span>
+            <div class="mt-1.5 flex items-center gap-3">
+              <label class="inline-flex items-center gap-1.5 text-sm cursor-pointer">
+                <input
+                  type="radio"
+                  name="userRole"
+                  class="h-4 w-4 accent-sky-700"
+                  [checked]="!model().admin"
+                  (change)="setRole(false)"
+                />
+                <span>พยาบาล</span>
+              </label>
+              <label class="inline-flex items-center gap-1.5 text-sm cursor-pointer">
+                <input
+                  type="radio"
+                  name="userRole"
+                  class="h-4 w-4 accent-sky-700"
+                  [checked]="model().admin"
+                  (change)="setRole(true)"
+                />
+                <span class="font-semibold text-sky-800">Admin</span>
+              </label>
+            </div>
+          </div>
           <button type="submit" class="btn btn-primary" [disabled]="f().submitting()">
             เพิ่มบัญชี
           </button>
@@ -78,7 +99,7 @@ const USERNAME = /^[A-Za-z0-9._-]{2,40}$/;
             <tr class="border-b border-line text-xs text-ink-2">
               <th scope="col" class="px-4 py-2.5 font-semibold">ชื่อผู้ใช้</th>
               <th scope="col" class="px-4 py-2.5 font-semibold">ชื่อ</th>
-              <th scope="col" class="px-4 py-2.5 font-semibold">สิทธิ์</th>
+              <th scope="col" class="px-4 py-2.5 font-semibold">ประเภทผู้ใช้</th>
               <th scope="col" class="px-4 py-2.5 font-semibold">สถานะ</th>
               <th scope="col" class="px-4 py-2.5 font-semibold">สร้างเมื่อ</th>
               <th scope="col" class="px-4 py-2.5"><span class="sr-only">คำสั่ง</span></th>
@@ -94,7 +115,11 @@ const USERNAME = /^[A-Za-z0-9._-]{2,40}$/;
                     <span class="badge badge-plain ml-1">คุณ</span>
                   }
                 </td>
-                <td class="px-4 py-2.5">{{ u.admin ? 'ผู้ดูแลระบบ' : 'อาจารย์' }}</td>
+                <td class="px-4 py-2.5">
+                  <span class="badge" [class]="u.admin ? 'badge-ok font-semibold' : 'badge-plain'">
+                    {{ u.admin ? 'Admin' : 'พยาบาล' }}
+                  </span>
+                </td>
                 <td class="px-4 py-2.5">
                   <span class="badge" [class]="u.active ? 'badge-ok' : 'badge-plain'">
                     {{ u.active ? 'ใช้งาน' : 'ปิดอยู่' }}
@@ -107,11 +132,11 @@ const USERNAME = /^[A-Za-z0-9._-]{2,40}$/;
                       type="button"
                       class="btn btn-ghost"
                       [attr.aria-label]="
-                        (u.admin ? 'เลิกเป็นผู้ดูแล ' : 'ตั้งเป็นผู้ดูแล ') + u.username
+                        (u.admin ? 'เปลี่ยนเป็นพยาบาล ' : 'เปลี่ยนเป็น Admin ') + u.username
                       "
                       (click)="change(u, { admin: !u.admin })"
                     >
-                      {{ u.admin ? 'เลิกเป็นผู้ดูแล' : 'ตั้งเป็นผู้ดูแล' }}
+                      {{ u.admin ? 'เปลี่ยนเป็นพยาบาล' : 'เปลี่ยนเป็น Admin' }}
                     </button>
                     <button
                       type="button"
@@ -202,6 +227,10 @@ export class UsersPage {
 
   protected generate(): void {
     this.model.update((m) => ({ ...m, password: randomPassword() }));
+  }
+
+  protected setRole(admin: boolean): void {
+    this.model.update((m) => ({ ...m, admin }));
   }
 
   protected async add(e: Event): Promise<void> {

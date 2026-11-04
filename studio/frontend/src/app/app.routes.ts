@@ -2,9 +2,8 @@ import { Routes } from '@angular/router';
 import { adminOnly, signedIn, signedOut } from './account/guards';
 import { SignInPage } from './account/signin.page';
 import type { DraftEditorPage } from './editor/draft-editor.page';
-import { DraftListPage } from './list/draft-list.page';
 
-/** The list and sign-in come with the first load; the other pages load when first opened. */
+/** The routes: Board, Case Library, Equipment, Knowledge, Case MG, Knowledge MG, Equipment MG. */
 export const routes: Routes = [
   {
     path: 'signin',
@@ -16,7 +15,47 @@ export const routes: Routes = [
     path: '',
     canActivateChild: [signedIn],
     children: [
-      { path: '', component: DraftListPage, title: 'เคสทั้งหมด · Case Studio' },
+      {
+        path: '',
+        loadComponent: () => import('./board/board.page').then((m) => m.BoardPage),
+        title: 'Board · Case Studio',
+      },
+      {
+        path: 'case',
+        loadComponent: () =>
+          import('./case-library/case-library.page').then((m) => m.CaseLibraryPage),
+        title: 'คลังเคส · Case Studio',
+      },
+      {
+        path: 'equipment',
+        loadComponent: () => import('./equipment/equipment.page').then((m) => m.EquipmentPage),
+        title: 'คลังอุปกรณ์ · Case Studio',
+      },
+      {
+        path: 'knowledge',
+        loadComponent: () => import('./knowledge/knowledge.page').then((m) => m.KnowledgePage),
+        title: 'คลังความรู้ · Case Studio',
+      },
+      {
+        path: 'guide',
+        loadComponent: () => import('./knowledge/knowledge.page').then((m) => m.KnowledgePage),
+        title: 'คลังความรู้ · Case Studio',
+      },
+      {
+        path: 'case-mg',
+        loadComponent: () => import('./case-mg/case-mg.page').then((m) => m.CaseMgPage),
+        title: 'จัดการเคส · Case Studio',
+      },
+      {
+        path: 'equipment-mg',
+        loadComponent: () => import('./knowledge/knowledge-mg.page').then((m) => m.KnowledgeMgPage),
+        title: 'จัดการคลังความรู้ · Case Studio',
+      },
+      {
+        path: 'knowledge-mg',
+        loadComponent: () => import('./equipment/equipment-mg.page').then((m) => m.EquipmentMgPage),
+        title: 'จัดการอุปกรณ์ · Case Studio',
+      },
       {
         path: 'drafts/:id',
         loadComponent: () => import('./editor/draft-editor.page').then((m) => m.DraftEditorPage),

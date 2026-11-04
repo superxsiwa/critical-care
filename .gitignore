@@ -26,8 +26,10 @@ frontend/.env
 *.db-wal
 *.sqlite
 *.sqlite-journal
+*.key
 backend/prisma/*.db
 backend/prisma/*.db-*
+studio/data/
 
 # Vite / Bundler / Tooling Caches
 .vite/

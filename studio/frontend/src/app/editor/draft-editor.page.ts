@@ -14,12 +14,13 @@ import { ApiError, StudioApi } from '../api/studio-api';
 import { Json, Problem } from '../api/types';
 import { blankStep, nextStepId } from '../case/blank';
 import { anchorOf, asText, isObject, isWithin, listAt } from '../case/json';
-import { describePath, stepOf } from '../case/where';
+import { describePath, friendlyMessage, stepOf } from '../case/where';
 import { Confirm } from '../ui/confirm';
 import { failure, formatTime } from '../ui/words';
 import { Toasts } from '../ui/toast';
 import { CaseEditor } from './case-editor';
 import { CaseFields } from './case-fields';
+import { BedsidePreview } from './bedside-preview';
 import { ProblemsAt } from './fields';
 import { JsonTab } from './json-tab';
 import { StepEditor } from './step';
@@ -35,7 +36,7 @@ const CHECK_AFTER_MS = 350;
  */
 @Component({
   selector: 'cs-draft-editor',
-  imports: [RouterLink, CaseFields, StepEditor, JsonTab, ProblemsAt],
+  imports: [RouterLink, CaseFields, StepEditor, JsonTab, ProblemsAt, BedsidePreview],
   providers: [CaseEditor],
   host: {
     class: 'block',
@@ -74,6 +75,15 @@ const CHECK_AFTER_MS = 350;
               }
             </p>
           </div>
+          <button
+            type="button"
+            class="btn"
+            [class.btn-primary]="showPreview()"
+            (click)="showPreview.set(!showPreview())"
+            title="ดูตัวอย่างมอนิเตอร์และคำสั่งแพทย์จำลอง"
+          >
+            {{ showPreview() ? 'ซ่อนจอมอนิเตอร์' : 'จำลองจอมอนิเตอร์' }}
+          </button>
           <button
             type="button"
             class="btn btn-primary"
@@ -169,7 +179,10 @@ const CHECK_AFTER_MS = 350;
                   (click)="goTo(p)"
                 >
                   <span class="font-medium text-ink">{{ where(p) }}</span>
-                  <span class="text-rose-700" lang="en"> {{ p.message }}</span>
+                  <span class="text-rose-700"> {{ friendly(p.message) }}</span>
+                  <span class="text-xs text-rose-500 font-normal" lang="en">
+                    ({{ p.message }})</span
+                  >
                   <span class="key ml-1" aria-hidden="true">{{ p.path }}</span>
                 </button>
               </li>
@@ -180,6 +193,12 @@ const CHECK_AFTER_MS = 350;
           สตูดิโอตรวจเพียงว่าแอปเล่นเคสนี้ได้ ความถูกต้องทางคลินิกเป็นหน้าที่ของผู้ตรวจทานเนื้อหา
         </p>
       </section>
+
+      @if (showPreview()) {
+        <div class="mt-4">
+          <cs-bedside-preview />
+        </div>
+      }
 
       <div
         id="editor-panel"
@@ -216,6 +235,14 @@ const CHECK_AFTER_MS = 350;
                   >
                     ย้ายไปหลัง →
                   </button>
+                  <button
+                    type="button"
+                    class="btn"
+                    (click)="duplicateStep(n - 1)"
+                    title="คัดลอกขั้นตอนนี้"
+                  >
+                    คัดลอกขั้นนี้
+                  </button>
                   <button type="button" class="btn btn-danger" (click)="removeStep(n - 1)">
                     ลบขั้นนี้
                   </button>
@@ -248,6 +275,7 @@ export class DraftEditorPage {
   readonly id = input.required<string>();
 
   protected readonly loaded = signal(false);
+  protected readonly showPreview = signal(false);
   protected readonly failed = signal('');
   protected readonly version = signal(0);
   private readonly updatedAt = signal('');
@@ -423,6 +451,19 @@ export class DraftEditorPage {
     this.tab.set(i + by);
   }
 
+  protected duplicateStep(i: number): void {
+    const steps = [...this.steps()];
+    const source = steps[i];
+    if (!isObject(source)) return;
+    const cloned = JSON.parse(JSON.stringify(source));
+    cloned['id'] = nextStepId(steps);
+    const oldName = asText(cloned['name']);
+    cloned['name'] = oldName ? `${oldName} (คัดลอก)` : '';
+    steps.splice(i + 1, 0, cloned);
+    this.editor.set(['stageData'], steps);
+    this.tab.set(i + 1);
+  }
+
   protected async removeStep(i: number): Promise<void> {
     const yes = await this.confirm.ask({
       title: `ลบขั้นที่ ${i + 1}?`,
@@ -436,6 +477,8 @@ export class DraftEditorPage {
       this.steps().filter((_, k) => k !== i),
     );
   }
+
+  protected readonly friendly = friendlyMessage;
 
   protected where(p: Problem): string {
     return describePath(p.path);

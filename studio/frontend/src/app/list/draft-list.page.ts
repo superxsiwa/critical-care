@@ -21,12 +21,39 @@ interface Refused {
   selector: 'cs-draft-list',
   imports: [RouterLink],
   template: `
+    <!-- สรุปภาพรวม Board -->
+    <div class="mb-5 grid grid-cols-2 gap-3 sm:grid-cols-4">
+      <div class="card border-l-4 border-sky-600 p-3.5">
+        <span class="text-xs text-ink-3">เคสทั้งหมดในวอร์ด</span>
+        <p class="mt-0.5 text-2xl font-bold text-ink">
+          {{ items().length }} <span class="text-xs font-normal text-ink-3">เคส</span>
+        </p>
+      </div>
+      <div class="card border-l-4 border-emerald-600 p-3.5">
+        <span class="text-xs text-ink-3">พร้อมส่งออก (Valid)</span>
+        <p class="mt-0.5 text-2xl font-bold text-emerald-700">
+          {{ readyCount() }} <span class="text-xs font-normal text-ink-3">เคส</span>
+        </p>
+      </div>
+      <div class="card border-l-4 border-rose-500 p-3.5">
+        <span class="text-xs text-ink-3">ต้องตรวจสอบแก้ไข</span>
+        <p class="mt-0.5 text-2xl font-bold text-rose-700">
+          {{ problemCount() }} <span class="text-xs font-normal text-ink-3">เคส</span>
+        </p>
+      </div>
+      <div class="card border-l-4 border-indigo-600 p-3.5">
+        <span class="text-xs text-ink-3">อุปกรณ์และยาในคลัง</span>
+        <p class="mt-0.5 text-2xl font-bold text-indigo-700">
+          {{ meta.equipment().length }} <span class="text-xs font-normal text-ink-3">ชนิด</span>
+        </p>
+      </div>
+    </div>
+
     <div class="flex flex-wrap items-end gap-3">
       <div class="min-w-0 flex-1">
-        <h1 class="text-xl font-semibold">เคสทั้งหมด</h1>
+        <h1 class="text-xl font-semibold">Board และคลังเคส</h1>
         <p class="text-sm text-ink-2">
-          เขียนเคสทีละเตียง แล้วส่งออกทุกเคสเป็นไฟล์แพ็กเกจเดียวให้แอปนำเข้า (ในแอป: ตั้งค่า ›
-          จัดการเคสหัตถการ › นำเข้าไฟล์ JSON)
+          จัดการเคสจำลองสำหรับเตียงผู้ป่วยวิกฤต CCU และส่งออกแพ็กเกจ (.json) สำหรับแอปมือถือ
         </p>
       </div>
       <button type="button" class="btn btn-primary" [disabled]="busy()" (click)="newDraft()">
@@ -177,6 +204,10 @@ export class DraftListPage {
     });
   }
   protected readonly items = computed(() => (this.drafts.hasValue() ? this.drafts.value() : []));
+  protected readonly readyCount = computed(() => this.items().filter((d) => !d.problems).length);
+  protected readonly problemCount = computed(
+    () => this.items().filter((d) => (d.problems ?? 0) > 0).length,
+  );
   protected readonly busy = signal(false);
   protected readonly refused = signal<Refused | null>(null);
 

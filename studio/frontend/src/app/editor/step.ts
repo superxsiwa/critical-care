@@ -1,6 +1,6 @@
 import { Component, computed, inject, input } from '@angular/core';
 import { POOL_TASKS, TaskKey, blankTask } from '../case/blank';
-import { Path, isObject, pathText } from '../case/json';
+import { Path, asText, isObject, pathText } from '../case/json';
 import { Confirm } from '../ui/confirm';
 import { CaseEditor } from './case-editor';
 import { NumberField, ProblemsAt, TextField } from './fields';
@@ -57,8 +57,30 @@ export const TASK_NAMES: Record<TaskKey, string> = {
         <cs-problems-at [at]="at('vitals')" />
         <div class="grid grid-cols-2 gap-3 md:grid-cols-4">
           <cs-number label="HR (ครั้ง/นาที)" [path]="vital('hr')" />
-          <cs-text label="BP (mmHg)" [path]="vital('bp')" placeholder="ตัวบน/ตัวล่าง" />
-          <cs-text label="SpO2" [path]="vital('spo2')" placeholder="ตัวเลขตามด้วย %" />
+          <div>
+            <cs-text label="BP (mmHg)" [path]="vital('bp')" placeholder="ตัวบน/ตัวล่าง" />
+            @if (canCalcMap()) {
+              <button
+                type="button"
+                class="btn btn-ghost mt-1 text-xs text-sky-800"
+                (click)="calcMap()"
+              >
+                คำนวณ MAP จาก BP
+              </button>
+            }
+          </div>
+          <div>
+            <cs-text label="SpO2" [path]="vital('spo2')" placeholder="ตัวเลขตามด้วย %" />
+            @if (canFixSpo2()) {
+              <button
+                type="button"
+                class="btn btn-ghost mt-1 text-xs text-sky-800"
+                (click)="fixSpo2()"
+              >
+                เติม % ให้อัตโนมัติ
+              </button>
+            }
+          </div>
           <cs-number label="MAP (mmHg)" [path]="vital('map')" />
         </div>
       </fieldset>
@@ -133,6 +155,33 @@ export class StepEditor {
     if (!has.some((k) => POOL_TASKS.includes(k))) out.push(...POOL_TASKS);
     return out;
   });
+
+  protected calcMap(): void {
+    const rawBp = asText(this.editor.value(this.vital('bp'))).trim();
+    const m = /^(\d+)\/(\d+)$/.exec(rawBp);
+    if (!m) return;
+    const sbp = Number(m[1]);
+    const dbp = Number(m[2]);
+    const mapVal = Math.round((2 * dbp + sbp) / 3);
+    this.editor.set(this.vital('map'), mapVal);
+  }
+
+  protected canCalcMap(): boolean {
+    const rawBp = asText(this.editor.value(this.vital('bp'))).trim();
+    return /^(\d+)\/(\d+)$/.test(rawBp);
+  }
+
+  protected fixSpo2(): void {
+    const raw = asText(this.editor.value(this.vital('spo2'))).trim();
+    if (/^\d{1,3}$/.test(raw)) {
+      this.editor.set(this.vital('spo2'), `${raw}%`);
+    }
+  }
+
+  protected canFixSpo2(): boolean {
+    const raw = asText(this.editor.value(this.vital('spo2'))).trim();
+    return /^\d{1,3}$/.test(raw);
+  }
 
   protected at(key: string): Path {
     return [...this.path(), key];
