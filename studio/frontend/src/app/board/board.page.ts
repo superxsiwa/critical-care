@@ -19,25 +19,25 @@ import { formatTime } from '../ui/words';
 
       <!-- การ์ดสถิติสรุป (Summary KPI Cards) -->
       <div class="grid grid-cols-2 gap-4 sm:grid-cols-4">
-        <div class="card border-l-4 border-sky-600 p-4">
+        <div class="card p-4">
           <span class="text-xs font-medium text-ink-3">เคสทั้งหมดในวอร์ด</span>
           <p class="mt-1 text-2xl font-bold text-ink">
             {{ items().length }} <span class="text-xs font-normal text-ink-3">เคส</span>
           </p>
         </div>
-        <div class="card border-l-4 border-emerald-600 p-4">
+        <div class="card p-4">
           <span class="text-xs font-medium text-ink-3">พร้อมส่งออก (Valid)</span>
           <p class="mt-1 text-2xl font-bold text-emerald-700">
             {{ readyCount() }} <span class="text-xs font-normal text-ink-3">เคส</span>
           </p>
         </div>
-        <div class="card border-l-4 border-rose-500 p-4">
+        <div class="card p-4">
           <span class="text-xs font-medium text-ink-3">ต้องตรวจสอบแก้ไข</span>
           <p class="mt-1 text-2xl font-bold text-rose-700">
             {{ problemCount() }} <span class="text-xs font-normal text-ink-3">เคส</span>
           </p>
         </div>
-        <div class="card border-l-4 border-indigo-600 p-4">
+        <div class="card p-4">
           <span class="text-xs font-medium text-ink-3">อุปกรณ์และยาในคลัง</span>
           <p class="mt-1 text-2xl font-bold text-indigo-700">
             {{ meta.equipment().length }} <span class="text-xs font-normal text-ink-3">ชนิด</span>
