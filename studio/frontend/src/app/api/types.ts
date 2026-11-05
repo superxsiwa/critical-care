@@ -56,7 +56,13 @@ export interface Me {
   id: number;
   username: string;
   name: string;
+  /** The person's Google email ('' when none): their Google sign-in is matched by it. */
+  email: string;
   admin: boolean;
+  /** A Google account is tied to the account (it signed in with Google once). */
+  google: boolean;
+  /** The account has a password (a Google-only account has none). */
+  hasPassword: boolean;
 }
 
 /** An account, as an admin sees it. */

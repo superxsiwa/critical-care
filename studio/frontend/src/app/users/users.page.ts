@@ -1,6 +1,6 @@
 import { httpResource } from '@angular/common/http';
 import { Component, computed, inject, signal } from '@angular/core';
-import { FormField, form, minLength, pattern, required, submit } from '@angular/forms/signals';
+import { FormField, form, pattern, required, submit, validate } from '@angular/forms/signals';
 import { ApiError, StudioApi } from '../api/studio-api';
 import { Session } from '../api/session';
 import { Account } from '../api/types';
@@ -16,10 +16,14 @@ function randomPassword(): string {
 }
 
 const USERNAME = /^[A-Za-z0-9._-]{2,40}$/;
+const EMAIL = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
+
+type AddKey = 'username' | 'name' | 'email' | 'password';
 
 /**
- * The accounts, for an admin: nobody signs up, an admin adds each instructor and tells them their
- * password. An account is switched off rather than deleted, so a draft can still say who saved it.
+ * The accounts, for an admin: nobody signs up. An admin adds each person with their Google email
+ * (they sign in with Google) and, if they want one, a fallback password to tell them. An account is
+ * switched off rather than deleted, so a draft can still say who saved it.
  */
 @Component({
   selector: 'cs-users-page',
@@ -33,7 +37,7 @@ const USERNAME = /^[A-Za-z0-9._-]{2,40}$/;
     <section class="card mt-4 p-4" aria-labelledby="add-title">
       <h2 id="add-title" class="section-title">เพิ่มบัญชี</h2>
       <form
-        class="mt-3 grid gap-3 md:grid-cols-[1fr_1fr_1fr_auto]"
+        class="mt-3 grid gap-3 md:grid-cols-[1fr_1fr_1.3fr_1fr_auto]"
         (submit)="add($event)"
         novalidate
       >
@@ -43,6 +47,7 @@ const USERNAME = /^[A-Za-z0-9._-]{2,40}$/;
             <input
               class="input"
               [id]="'add-' + k.key"
+              [type]="k.key === 'email' ? 'email' : 'text'"
               [attr.autocomplete]="k.key === 'password' ? 'new-password' : 'off'"
               spellcheck="false"
               [formField]="f[k.key]"
@@ -51,6 +56,9 @@ const USERNAME = /^[A-Za-z0-9._-]{2,40}$/;
             />
             @if (shown(k.key)) {
               <span class="field-error" [id]="'add-' + k.key + '-err'">{{ first(k.key) }}</span>
+            }
+            @if (k.hint) {
+              <span class="mt-1 block text-xs text-ink-3">{{ k.hint }}</span>
             }
             @if (k.key === 'password') {
               <button type="button" class="btn btn-ghost mt-1 text-xs" (click)="generate()">
@@ -99,6 +107,7 @@ const USERNAME = /^[A-Za-z0-9._-]{2,40}$/;
             <tr class="border-b border-line text-xs text-ink-2">
               <th scope="col" class="px-4 py-2.5 font-semibold">ชื่อผู้ใช้</th>
               <th scope="col" class="px-4 py-2.5 font-semibold">ชื่อ</th>
+              <th scope="col" class="px-4 py-2.5 font-semibold">เข้าสู่ระบบด้วย</th>
               <th scope="col" class="px-4 py-2.5 font-semibold">ประเภทผู้ใช้</th>
               <th scope="col" class="px-4 py-2.5 font-semibold">สถานะ</th>
               <th scope="col" class="px-4 py-2.5 font-semibold">สร้างเมื่อ</th>
@@ -113,6 +122,37 @@ const USERNAME = /^[A-Za-z0-9._-]{2,40}$/;
                   {{ u.name }}
                   @if (u.id === me()?.id) {
                     <span class="badge badge-plain ml-1">คุณ</span>
+                  }
+                </td>
+                <td class="px-4 py-2.5">
+                  @if (editing() === u.id) {
+                    <form
+                      class="flex flex-wrap items-center gap-1.5"
+                      (submit)="saveEmail($event, u)"
+                    >
+                      <input
+                        class="input w-56"
+                        type="email"
+                        spellcheck="false"
+                        [attr.aria-label]="'อีเมล Google ของ ' + u.username"
+                        [value]="emailDraft()"
+                        (input)="draftEmail($event)"
+                      />
+                      <button type="submit" class="btn btn-primary">บันทึก</button>
+                      <button type="button" class="btn btn-ghost" (click)="editing.set(null)">
+                        ยกเลิก
+                      </button>
+                    </form>
+                  } @else {
+                    @if (u.email) {
+                      <span class="block">{{ u.email }}</span>
+                      <span class="badge" [class]="u.google ? 'badge-ok' : 'badge-plain'">
+                        {{ u.google ? 'Google ผูกแล้ว' : 'Google รอเข้าครั้งแรก' }}
+                      </span>
+                    }
+                    @if (u.hasPassword) {
+                      <span class="badge badge-plain ml-1">รหัสผ่าน</span>
+                    }
                   }
                 </td>
                 <td class="px-4 py-2.5">
@@ -146,6 +186,24 @@ const USERNAME = /^[A-Za-z0-9._-]{2,40}$/;
                       (click)="change(u, { active: !u.active })"
                     >
                       {{ u.active ? 'ปิดบัญชี' : 'เปิดบัญชี' }}
+                    </button>
+                  }
+                  <button
+                    type="button"
+                    class="btn btn-ghost"
+                    [attr.aria-label]="'แก้อีเมล Google ' + u.username"
+                    (click)="editEmail(u)"
+                  >
+                    แก้อีเมล
+                  </button>
+                  @if (u.google) {
+                    <button
+                      type="button"
+                      class="btn btn-ghost"
+                      [attr.aria-label]="'ยกเลิกการผูก Google ' + u.username"
+                      (click)="unlink(u)"
+                    >
+                      ยกเลิกการผูก Google
                     </button>
                   }
                   <button
@@ -196,28 +254,47 @@ export class UsersPage {
   /** A password just set, shown once so the admin can pass it on. */
   protected readonly handed = signal<{ username: string; password: string } | null>(null);
 
-  protected readonly addKeys = [
+  protected readonly addKeys: readonly { key: AddKey; label: string; hint?: string }[] = [
     { key: 'username', label: 'ชื่อผู้ใช้ (ใช้เข้าสู่ระบบ)' },
     { key: 'name', label: 'ชื่อ-นามสกุล' },
-    { key: 'password', label: 'รหัสผ่านเริ่มต้น' },
-  ] as const;
+    { key: 'email', label: 'อีเมล Google', hint: 'เข้าสู่ระบบด้วยบัญชี Google ของอีเมลนี้' },
+    { key: 'password', label: 'รหัสผ่านสำรอง', hint: 'เว้นว่างได้ ถ้าใช้ Google อย่างเดียว' },
+  ];
 
-  private readonly model = signal({ username: '', name: '', password: '', admin: false });
+  /** The row whose email is being edited, and its draft. */
+  protected readonly editing = signal<number | null>(null);
+  protected readonly emailDraft = signal('');
+
+  private readonly blank = { username: '', name: '', email: '', password: '', admin: false };
+  private readonly model = signal({ ...this.blank });
   protected readonly f = form(this.model, (p) => {
     required(p.username, { message: 'ใส่ชื่อผู้ใช้' });
     pattern(p.username, USERNAME, {
       message: 'ใช้ได้เฉพาะตัวอักษรอังกฤษ ตัวเลข จุด ขีด และขีดล่าง 2 ถึง 40 ตัว',
     });
     required(p.name, { message: 'ใส่ชื่อของเจ้าของบัญชี' });
-    required(p.password, { message: 'ใส่รหัสผ่านเริ่มต้น หรือกดสุ่มรหัสผ่าน' });
-    minLength(p.password, 10, { message: 'รหัสผ่านต้องมีอย่างน้อย 10 ตัวอักษร' });
+    validate(p.email, ({ value, valueOf }) => {
+      const email = value().trim();
+      if (email && !EMAIL.test(email)) return { kind: 'email', message: 'อีเมลนี้ไม่ถูกต้อง' };
+      if (!email && !valueOf(p.password))
+        return {
+          kind: 'no-sign-in',
+          message: 'ใส่อีเมล Google หรือรหัสผ่าน อย่างน้อยอย่างหนึ่ง เพื่อให้เข้าสู่ระบบได้',
+        };
+      return undefined;
+    });
+    validate(p.password, ({ value }) =>
+      value() && value().length < 10
+        ? { kind: 'short', message: 'รหัสผ่านต้องมีอย่างน้อย 10 ตัวอักษร' }
+        : undefined,
+    );
   });
 
-  protected shown(key: 'username' | 'name' | 'password'): boolean {
+  protected shown(key: AddKey): boolean {
     return this.f[key]().touched() && this.f[key]().invalid();
   }
 
-  protected first(key: 'username' | 'name' | 'password'): string {
+  protected first(key: AddKey): string {
     return this.f[key]().errors()[0]?.message ?? '';
   }
 
@@ -245,11 +322,13 @@ export class UsersPage {
           ? f.username
           : code.startsWith('name')
             ? f.name
-            : f.password;
+            : code.startsWith('email') || code === 'no-sign-in'
+              ? f.email
+              : f.password;
         return [{ fieldTree: field, kind: 'server', message: failure(err) }];
       }
-      this.handed.set({ username: a.username, password: a.password });
-      this.model.set({ username: '', name: '', password: '', admin: false });
+      this.handed.set(a.password ? { username: a.username, password: a.password } : null);
+      this.model.set({ ...this.blank });
       this.f().reset();
       this.toasts.show(`เพิ่มบัญชี ${a.username} แล้ว`);
       this.users.reload();
@@ -277,6 +356,52 @@ export class UsersPage {
         active: to.active ?? u.active,
       });
       this.toasts.show(`เปลี่ยนบัญชี ${u.username} แล้ว`);
+    } catch (err) {
+      this.toasts.show(failure(err), true);
+    }
+    this.users.reload();
+  }
+
+  protected draftEmail(e: Event): void {
+    this.emailDraft.set((e.target as HTMLInputElement).value);
+  }
+
+  protected editEmail(u: Account): void {
+    this.emailDraft.set(u.email);
+    this.editing.set(u.id);
+  }
+
+  protected async saveEmail(e: Event, u: Account): Promise<void> {
+    e.preventDefault();
+    const email = this.emailDraft().trim();
+    if (email.toLowerCase() !== u.email && u.google) {
+      const yes = await this.confirm.ask({
+        title: `เปลี่ยนอีเมล Google ของ ${u.username}?`,
+        body: 'บัญชี Google เดิมจะเลิกผูก และเครื่องที่เข้าสู่ระบบด้วยบัญชีนี้อยู่จะต้องเข้าสู่ระบบใหม่',
+        yes: 'เปลี่ยนอีเมล',
+      });
+      if (!yes) return;
+    }
+    try {
+      await this.api.setEmail(u.id, email);
+      this.editing.set(null);
+      this.toasts.show(`เปลี่ยนอีเมลของ ${u.username} แล้ว`);
+    } catch (err) {
+      this.toasts.show(failure(err), true);
+    }
+    this.users.reload();
+  }
+
+  protected async unlink(u: Account): Promise<void> {
+    const yes = await this.confirm.ask({
+      title: `ยกเลิกการผูก Google ของ ${u.username}?`,
+      body: 'ใช้เมื่อเจ้าของบัญชีเปลี่ยนบัญชี Google: เครื่องที่เข้าสู่ระบบอยู่จะต้องเข้าใหม่ และการเข้าด้วย Google ครั้งถัดไปที่ใช้อีเมลเดิมจะผูกใหม่',
+      yes: 'ยกเลิกการผูก',
+    });
+    if (!yes) return;
+    try {
+      await this.api.unlinkGoogle(u.id);
+      this.toasts.show(`ยกเลิกการผูก Google ของ ${u.username} แล้ว`);
     } catch (err) {
       this.toasts.show(failure(err), true);
     }

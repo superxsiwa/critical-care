@@ -13,7 +13,7 @@ import { SignInForm } from './signin-form';
         <p class="mt-1 mb-4 text-sm text-ink-2">
           สำหรับผู้ใช้งาน 2 ประเภท: 1. Admin 2. พยาบาล (บัญชีสร้างโดย Admin)
         </p>
-        <cs-signin-form (signedIn)="go()" />
+        <cs-signin-form [next]="next()" [googleRefused]="google()" (signedIn)="go()" />
       </section>
       <p class="mt-4 text-center text-xs text-ink-3">
         <a class="underline" href="/about.html">เกี่ยวกับ Case Studio</a> ·
@@ -26,6 +26,8 @@ export class SignInPage {
   private readonly router = inject(Router);
   /** Where to go after signing in (from the guard); only a path of this site. */
   readonly next = input<string>();
+  /** Why a Google sign-in was just refused (the server sends ?google=<code>). */
+  readonly google = input<string>();
 
   protected go(): void {
     const next = this.next();

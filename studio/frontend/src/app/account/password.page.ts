@@ -1,4 +1,4 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { FormField, form, minLength, required, submit, validate } from '@angular/forms/signals';
 import { RouterLink } from '@angular/router';
 import { ApiError } from '../api/studio-api';
@@ -6,20 +6,30 @@ import { Session } from '../api/session';
 import { Toasts } from '../ui/toast';
 import { failure } from '../ui/words';
 
-/** Changing one's own password; every other session of the account ends with it. */
+/**
+ * Changing one's own password; every other session of the account ends with it. An account without
+ * a password (signed in with Google) sets its first one here, the fallback, without a current one.
+ */
 @Component({
   selector: 'cs-password-page',
   imports: [FormField, RouterLink],
   template: `
     <div class="mx-auto mt-6 max-w-md">
       <section class="card p-6" aria-labelledby="password-title">
-        <h1 id="password-title" class="text-lg font-semibold">เปลี่ยนรหัสผ่าน</h1>
+        <h1 id="password-title" class="text-lg font-semibold">
+          {{ hasPassword() ? 'เปลี่ยนรหัสผ่าน' : 'ตั้งรหัสผ่านสำรอง' }}
+        </h1>
         <p class="mt-1 mb-4 text-sm text-ink-2">
-          อย่างน้อย 10 ตัวอักษร เมื่อเปลี่ยนแล้ว
-          เครื่องอื่นที่เข้าสู่ระบบด้วยบัญชีนี้จะต้องเข้าสู่ระบบใหม่
+          @if (hasPassword()) {
+            อย่างน้อย 10 ตัวอักษร เมื่อเปลี่ยนแล้ว
+            เครื่องอื่นที่เข้าสู่ระบบด้วยบัญชีนี้จะต้องเข้าสู่ระบบใหม่
+          } @else {
+            บัญชีนี้เข้าสู่ระบบด้วย Google ตั้งรหัสผ่านไว้ใช้เมื่อเข้าด้วย Google ไม่ได้ (อย่างน้อย
+            10 ตัวอักษร)
+          }
         </p>
         <form class="space-y-3" (submit)="send($event)" novalidate>
-          @for (k of keys; track k.key) {
+          @for (k of shownKeys(); track k.key) {
             <div>
               <label class="label" [for]="'pw-' + k.key">{{ k.label }}</label>
               <input
@@ -38,7 +48,7 @@ import { failure } from '../ui/words';
           }
           <div class="flex gap-2 pt-1">
             <button type="submit" class="btn btn-primary" [disabled]="f().submitting()">
-              เปลี่ยนรหัสผ่าน
+              {{ hasPassword() ? 'เปลี่ยนรหัสผ่าน' : 'ตั้งรหัสผ่าน' }}
             </button>
             <a routerLink="/case-mg" class="btn">กลับไปรายการเคส</a>
           </div>
@@ -56,9 +66,18 @@ export class PasswordPage {
     { key: 'again', label: 'รหัสผ่านใหม่อีกครั้ง' },
   ] as const;
 
+  protected readonly hasPassword = computed(() => this.session.user()?.hasPassword !== false);
+  protected readonly shownKeys = computed(() =>
+    this.hasPassword() ? this.keys : this.keys.filter((k) => k.key !== 'current'),
+  );
+
   private readonly model = signal({ current: '', next: '', again: '' });
   protected readonly f = form(this.model, (p) => {
-    required(p.current, { message: 'ใส่รหัสผ่านปัจจุบัน' });
+    validate(p.current, ({ value }) =>
+      this.hasPassword() && !value()
+        ? { kind: 'required', message: 'ใส่รหัสผ่านปัจจุบัน' }
+        : undefined,
+    );
     required(p.next, { message: 'ใส่รหัสผ่านใหม่' });
     minLength(p.next, 10, { message: 'รหัสผ่านต้องมีอย่างน้อย 10 ตัวอักษร' });
     validate(p.again, ({ value, valueOf }) =>
@@ -87,9 +106,11 @@ export class PasswordPage {
           return [{ fieldTree: f.current, kind: 'server', message: 'รหัสผ่านปัจจุบันไม่ถูกต้อง' }];
         return [{ fieldTree: f.next, kind: 'server', message: failure(err) }];
       }
+      const first = !this.hasPassword();
+      await this.session.load(); // the account has a password now
       this.model.set({ current: '', next: '', again: '' });
       this.f().reset();
-      this.toasts.show('เปลี่ยนรหัสผ่านแล้ว');
+      this.toasts.show(first ? 'ตั้งรหัสผ่านสำรองแล้ว' : 'เปลี่ยนรหัสผ่านแล้ว');
       return undefined;
     });
   }

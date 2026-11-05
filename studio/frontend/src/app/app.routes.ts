@@ -9,6 +9,12 @@ import type { DraftEditorPage } from './editor/draft-editor.page';
  */
 export const routes: Routes = [
   {
+    // The Google popup's last page: open signed in or not (it reports how the sign-in ended).
+    path: 'signin/done',
+    loadComponent: () => import('./account/signin-done.page').then((m) => m.SignInDonePage),
+    title: 'เข้าสู่ระบบ · Case Studio',
+  },
+  {
     path: 'signin',
     component: SignInPage,
     title: 'เข้าสู่ระบบ · Case Studio',

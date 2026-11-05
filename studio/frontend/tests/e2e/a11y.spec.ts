@@ -26,6 +26,7 @@ const PAGES: [string, RegExp][] = [
 ];
 
 test('every page of the menu passes axe, empty and with drafts', async ({ page, studio }) => {
+  test.setTimeout(60_000); // 18 axe runs
   for (const [path, heading] of PAGES) {
     await page.goto(path);
     await expect(page.getByRole('heading', { level: 1 })).toHaveText(heading);

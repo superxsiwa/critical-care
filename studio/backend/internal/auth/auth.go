@@ -1,6 +1,7 @@
 // Package auth is who is calling: the credential (a JWT in an httpOnly cookie), the guard every /api/
 // request passes (CSRF on writes, the caller resolved once, the cookie sliding forward, admin-only
-// routes), sign-in with throttling, and the accounts an admin manages. Nobody signs up.
+// routes), sign-in with Google (google.go) or a password with throttling, and the accounts an admin
+// manages. Nobody signs up.
 package auth
 
 import (
@@ -35,17 +36,25 @@ const (
 	renewAfter = 10 * time.Minute
 )
 
-// User is the signed-in caller.
+// User is the signed-in caller. Google says whether a Google account is tied to it; HasPassword
+// whether it has a password (a Google-only account has none).
 type User struct {
-	ID       int64  `json:"id"`
-	Username string `json:"username"`
-	Name     string `json:"name"`
-	Admin    bool   `json:"admin"`
+	ID          int64  `json:"id"`
+	Username    string `json:"username"`
+	Name        string `json:"name"`
+	Email       string `json:"email"`
+	Admin       bool   `json:"admin"`
+	Google      bool   `json:"google"`
+	HasPassword bool   `json:"hasPassword"`
 }
 
 func userOf(u store.User) *User {
-	return &User{ID: u.ID, Username: u.Username, Name: u.Name, Admin: u.Admin}
+	return &User{ID: u.ID, Username: u.Username, Name: u.Name, Email: u.Email.String, Admin: u.Admin,
+		Google: u.GoogleSub.Valid, HasPassword: u.PasswordHash != ""}
 }
+
+// credential is what a session is bound to: the password hash and the Google tie.
+func credential(u store.User) string { return u.PasswordHash + "|" + u.GoogleSub.String }
 
 type ctxKey struct{}
 
@@ -62,12 +71,18 @@ type Service struct {
 	token    token
 	now      func() time.Time // the record clock (created_at, updated_at)
 	throttle *throttle
+	google   *googleSignIn // nil: Google sign-in is not set up (no client id)
 }
 
-// New makes the service. secret signs the sessions (LoadSecret); now is the record clock.
-func New(db *sql.DB, log *slog.Logger, secret []byte, now func() time.Time) *Service {
-	return &Service{db: db, log: log, token: token{secret: secret, lifetime: Idle, now: time.Now}, now: now,
+// New makes the service. secret signs the sessions (LoadSecret); now is the record clock; google
+// turns Google sign-in on when it has a client id.
+func New(db *sql.DB, log *slog.Logger, secret []byte, now func() time.Time, google GoogleConfig) *Service {
+	s := &Service{db: db, log: log, token: token{secret: secret, lifetime: Idle, now: time.Now}, now: now,
 		throttle: newThrottle()}
+	if google.ClientID != "" {
+		s.google = newGoogleSignIn(google, secret)
+	}
+	return s
 }
 
 func (s *Service) q() *store.Queries { return store.New(s.db) }
@@ -78,7 +93,8 @@ func (s *Service) stamp() string { return s.now().UTC().Format(time.RFC3339) }
 // signing in or out.
 func open(path string) bool {
 	switch path {
-	case "/api/meta", "/api/auth/session", "/api/auth/signin", "/api/auth/signout":
+	case "/api/meta", "/api/auth/session", "/api/auth/signin", "/api/auth/signout",
+		"/api/auth/google/start", "/api/auth/google/callback":
 		return true
 	}
 	return false
@@ -100,7 +116,7 @@ func (s *Service) Guard(next http.Handler) http.Handler {
 				return
 			}
 		}
-		u, issued, hash := s.current(r)
+		u, issued, cred := s.current(r)
 		if u == nil {
 			if !open(r.URL.Path) {
 				httpx.Refuse(w, http.StatusUnauthorized, "Sign in first", "signed-out")
@@ -114,14 +130,14 @@ func (s *Service) Guard(next http.Handler) http.Handler {
 			return
 		}
 		if time.Since(issued) > renewAfter && r.URL.Path != "/api/auth/signout" {
-			s.setSession(w, r, u.ID, hash)
+			s.setSession(w, r, u.ID, cred)
 		}
 		next.ServeHTTP(w, r.WithContext(context.WithValue(r.Context(), ctxKey{}, u)))
 	})
 }
 
-// current is the caller of r, the time their token was issued and their password hash, or nil: a
-// valid token, an account that exists and is on, and the password the token was issued under.
+// current is the caller of r, the time their token was issued and their credential, or nil: a valid
+// token, an account that exists and is on, and the credential the token was issued under.
 func (s *Service) current(r *http.Request) (*User, time.Time, string) {
 	c, err := r.Cookie(SessionCookie)
 	if err != nil || c.Value == "" {
@@ -135,15 +151,15 @@ func (s *Service) current(r *http.Request) (*User, time.Time, string) {
 	if err != nil || !row.Active {
 		return nil, time.Time{}, ""
 	}
-	want := sessionAuthHash(s.token.secret, row.PasswordHash)
+	want := sessionAuthHash(s.token.secret, credential(row))
 	if subtle.ConstantTimeCompare([]byte(want), []byte(p.sah)) != 1 {
 		return nil, time.Time{}, ""
 	}
-	return userOf(row), p.issuedAt, row.PasswordHash
+	return userOf(row), p.issuedAt, credential(row)
 }
 
-func (s *Service) setSession(w http.ResponseWriter, r *http.Request, userID int64, passwordHash string) {
-	raw, exp, err := s.token.issue(userID, passwordHash)
+func (s *Service) setSession(w http.ResponseWriter, r *http.Request, userID int64, cred string) {
+	raw, exp, err := s.token.issue(userID, cred)
 	if err != nil {
 		s.log.Error("issue session", "err", err)
 		return

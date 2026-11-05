@@ -83,6 +83,21 @@ func withDB(f func(*sql.DB) error) error {
 	return f(d)
 }
 
+// googleConfig is Google sign-in's settings from the environment (on the server, the service's
+// EnvironmentFile): off without a client id.
+func googleConfig() (auth.GoogleConfig, error) {
+	c := auth.GoogleConfig{
+		ClientID:     os.Getenv("CASESTUDIO_GOOGLE_CLIENT_ID"),
+		ClientSecret: os.Getenv("CASESTUDIO_GOOGLE_CLIENT_SECRET"),
+		PublicURL:    os.Getenv("CASESTUDIO_PUBLIC_URL"),
+		Issuer:       env("CASESTUDIO_GOOGLE_ISSUER", auth.GoogleIssuer),
+	}
+	if c.ClientID != "" && c.ClientSecret == "" {
+		return c, errors.New("CASESTUDIO_GOOGLE_CLIENT_ID is set without CASESTUDIO_GOOGLE_CLIENT_SECRET")
+	}
+	return c, nil
+}
+
 func serve(log *slog.Logger) error {
 	return withDB(func(d *sql.DB) error {
 		ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
@@ -91,11 +106,20 @@ func serve(log *slog.Logger) error {
 		if err != nil {
 			return err
 		}
+		google, err := googleConfig()
+		if err != nil {
+			return err
+		}
+		if google.ClientID != "" {
+			log.Info("google sign-in on", "client", google.ClientID, "public", google.PublicURL)
+		} else {
+			log.Info("google sign-in off (no CASESTUDIO_GOOGLE_CLIENT_ID): passwords only")
+		}
 		if n, err := store.New(d).CountUsers(ctx); err == nil && n == 0 {
 			log.Warn("no accounts yet: add the first admin with `casestudio user add <username> --admin --name <name>` (the password is read from the input)")
 		}
 		srv := &http.Server{
-			Handler:           server.New(server.Deps{DB: d, Log: log, Secret: secret}),
+			Handler:           server.New(server.Deps{DB: d, Log: log, Secret: secret, Google: google}),
 			ReadHeaderTimeout: 10 * time.Second,
 			ReadTimeout:       60 * time.Second,
 			WriteTimeout:      60 * time.Second,

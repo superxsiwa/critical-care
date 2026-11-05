@@ -7,6 +7,7 @@ package store
 
 import (
 	"context"
+	"database/sql"
 )
 
 const countActiveAdmins = `-- name: CountActiveAdmins :one
@@ -32,14 +33,15 @@ func (q *Queries) CountUsers(ctx context.Context) (int64, error) {
 }
 
 const createUser = `-- name: CreateUser :one
-INSERT INTO users (username, name, password_hash, admin, active, created_at, updated_at)
-VALUES (?1, ?2, ?3, ?4, 1, ?5, ?5)
-RETURNING id, username, name, password_hash, admin, active, created_at, updated_at
+INSERT INTO users (username, name, email, password_hash, admin, active, created_at, updated_at)
+VALUES (?1, ?2, ?3, ?4, ?5, 1, ?6, ?6)
+RETURNING id, username, name, password_hash, admin, active, created_at, updated_at, email, google_sub
 `
 
 type CreateUserParams struct {
 	Username     string
 	Name         string
+	Email        sql.NullString
 	PasswordHash string
 	Admin        bool
 	Now          string
@@ -49,6 +51,7 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, e
 	row := q.db.QueryRowContext(ctx, createUser,
 		arg.Username,
 		arg.Name,
+		arg.Email,
 		arg.PasswordHash,
 		arg.Admin,
 		arg.Now,
@@ -63,12 +66,14 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, e
 		&i.Active,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.Email,
+		&i.GoogleSub,
 	)
 	return i, err
 }
 
 const getUser = `-- name: GetUser :one
-SELECT id, username, name, password_hash, admin, active, created_at, updated_at FROM users WHERE id = ?1
+SELECT id, username, name, password_hash, admin, active, created_at, updated_at, email, google_sub FROM users WHERE id = ?1
 `
 
 func (q *Queries) GetUser(ctx context.Context, id int64) (User, error) {
@@ -83,12 +88,58 @@ func (q *Queries) GetUser(ctx context.Context, id int64) (User, error) {
 		&i.Active,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.Email,
+		&i.GoogleSub,
+	)
+	return i, err
+}
+
+const getUserByEmail = `-- name: GetUserByEmail :one
+SELECT id, username, name, password_hash, admin, active, created_at, updated_at, email, google_sub FROM users WHERE email = ?1 COLLATE NOCASE
+`
+
+func (q *Queries) GetUserByEmail(ctx context.Context, email sql.NullString) (User, error) {
+	row := q.db.QueryRowContext(ctx, getUserByEmail, email)
+	var i User
+	err := row.Scan(
+		&i.ID,
+		&i.Username,
+		&i.Name,
+		&i.PasswordHash,
+		&i.Admin,
+		&i.Active,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.Email,
+		&i.GoogleSub,
+	)
+	return i, err
+}
+
+const getUserByGoogleSub = `-- name: GetUserByGoogleSub :one
+SELECT id, username, name, password_hash, admin, active, created_at, updated_at, email, google_sub FROM users WHERE google_sub = ?1
+`
+
+func (q *Queries) GetUserByGoogleSub(ctx context.Context, googleSub sql.NullString) (User, error) {
+	row := q.db.QueryRowContext(ctx, getUserByGoogleSub, googleSub)
+	var i User
+	err := row.Scan(
+		&i.ID,
+		&i.Username,
+		&i.Name,
+		&i.PasswordHash,
+		&i.Admin,
+		&i.Active,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.Email,
+		&i.GoogleSub,
 	)
 	return i, err
 }
 
 const getUserByUsername = `-- name: GetUserByUsername :one
-SELECT id, username, name, password_hash, admin, active, created_at, updated_at FROM users WHERE username = ?1
+SELECT id, username, name, password_hash, admin, active, created_at, updated_at, email, google_sub FROM users WHERE username = ?1
 `
 
 func (q *Queries) GetUserByUsername(ctx context.Context, username string) (User, error) {
@@ -103,12 +154,34 @@ func (q *Queries) GetUserByUsername(ctx context.Context, username string) (User,
 		&i.Active,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.Email,
+		&i.GoogleSub,
 	)
 	return i, err
 }
 
+const linkGoogle = `-- name: LinkGoogle :execrows
+UPDATE users SET google_sub = ?1, updated_at = ?2
+WHERE id = ?3 AND google_sub IS NULL
+`
+
+type LinkGoogleParams struct {
+	GoogleSub sql.NullString
+	Now       string
+	ID        int64
+}
+
+// Only an account not tied yet: two sign-ins at once cannot tie it twice.
+func (q *Queries) LinkGoogle(ctx context.Context, arg LinkGoogleParams) (int64, error) {
+	result, err := q.db.ExecContext(ctx, linkGoogle, arg.GoogleSub, arg.Now, arg.ID)
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected()
+}
+
 const listUsers = `-- name: ListUsers :many
-SELECT id, username, name, password_hash, admin, active, created_at, updated_at FROM users ORDER BY active DESC, name COLLATE NOCASE, id
+SELECT id, username, name, password_hash, admin, active, created_at, updated_at, email, google_sub FROM users ORDER BY active DESC, name COLLATE NOCASE, id
 `
 
 func (q *Queries) ListUsers(ctx context.Context) ([]User, error) {
@@ -129,6 +202,8 @@ func (q *Queries) ListUsers(ctx context.Context) ([]User, error) {
 			&i.Active,
 			&i.CreatedAt,
 			&i.UpdatedAt,
+			&i.Email,
+			&i.GoogleSub,
 		); err != nil {
 			return nil, err
 		}
@@ -141,6 +216,26 @@ func (q *Queries) ListUsers(ctx context.Context) ([]User, error) {
 		return nil, err
 	}
 	return items, nil
+}
+
+const setEmail = `-- name: SetEmail :execrows
+UPDATE users SET email = ?1, google_sub = NULL, updated_at = ?2
+WHERE id = ?3
+`
+
+type SetEmailParams struct {
+	Email sql.NullString
+	Now   string
+	ID    int64
+}
+
+// A new email unties the Google account: the next Google sign-in is matched by the new email.
+func (q *Queries) SetEmail(ctx context.Context, arg SetEmailParams) (int64, error) {
+	result, err := q.db.ExecContext(ctx, setEmail, arg.Email, arg.Now, arg.ID)
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected()
 }
 
 const setPassword = `-- name: SetPassword :execrows
@@ -162,10 +257,28 @@ func (q *Queries) SetPassword(ctx context.Context, arg SetPasswordParams) (int64
 	return result.RowsAffected()
 }
 
+const unlinkGoogle = `-- name: UnlinkGoogle :execrows
+UPDATE users SET google_sub = NULL, updated_at = ?1
+WHERE id = ?2
+`
+
+type UnlinkGoogleParams struct {
+	Now string
+	ID  int64
+}
+
+func (q *Queries) UnlinkGoogle(ctx context.Context, arg UnlinkGoogleParams) (int64, error) {
+	result, err := q.db.ExecContext(ctx, unlinkGoogle, arg.Now, arg.ID)
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected()
+}
+
 const updateUser = `-- name: UpdateUser :one
 UPDATE users SET name = ?1, admin = ?2, active = ?3, updated_at = ?4
 WHERE id = ?5
-RETURNING id, username, name, password_hash, admin, active, created_at, updated_at
+RETURNING id, username, name, password_hash, admin, active, created_at, updated_at, email, google_sub
 `
 
 type UpdateUserParams struct {
@@ -194,6 +307,8 @@ func (q *Queries) UpdateUser(ctx context.Context, arg UpdateUserParams) (User, e
 		&i.Active,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.Email,
+		&i.GoogleSub,
 	)
 	return i, err
 }

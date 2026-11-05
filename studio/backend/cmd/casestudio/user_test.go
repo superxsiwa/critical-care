@@ -53,3 +53,51 @@ func TestUserCommand(t *testing.T) {
 		t.Fatalf("help: %q", out)
 	}
 }
+
+func TestUserCommandGoogle(t *testing.T) {
+	d, err := db.Open(filepath.Join(t.TempDir(), "casestudio.db"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer d.Close()
+	if err := migrate.Up(context.Background(), d); err != nil {
+		t.Fatal(err)
+	}
+	run := func(input string, args ...string) (string, error) {
+		var out bytes.Buffer
+		err := user(d, args, strings.NewReader(input), &out)
+		return out.String(), err
+	}
+	// With --email the password line may be empty: a Google-only account.
+	if out, err := run("\n", "add", "tn", "--name", "Thanee N.", "--email", "TN@colabscraft.com", "--admin"); err != nil ||
+		out != "added tn (Thanee N.), admin, Google tn@colabscraft.com\n" {
+		t.Fatalf("add with --email: %q %v", out, err)
+	}
+	if _, err := run("\n", "add", "ben", "--name", "Ben"); err == nil {
+		t.Fatal("no password and no email was accepted")
+	}
+	if out, err := run("", "add", "pw", "--name", "Pat"); err == nil || out != "" {
+		t.Fatalf("no input at all: %q %v", out, err)
+	}
+	run("pat-password-1\n", "add", "pat", "--name", "Pat")
+	if out, err := run("", "email", "pat", "Pat@Example.com"); err != nil || out != "pat signs in with Google as pat@example.com\n" {
+		t.Fatalf("email: %q %v", out, err)
+	}
+	if _, err := run("", "email", "pat", "tn@colabscraft.com"); err == nil || !strings.Contains(err.Error(), "Another account") {
+		t.Fatalf("someone else's email: %v", err)
+	}
+	if _, err := run("", "email", "tn"); err == nil || !strings.Contains(err.Error(), "needs a way to sign in") {
+		t.Fatalf("a Google-only account without email: %v", err)
+	}
+	if out, err := run("", "email", "pat"); err != nil || out != "pat has no Google email now\n" {
+		t.Fatalf("remove: %q %v", out, err)
+	}
+	u, _ := store.New(d).GetUserByUsername(context.Background(), "tn")
+	if u.PasswordHash != "" || u.Email.String != "tn@colabscraft.com" || auth.CheckPassword(u.PasswordHash, "") {
+		t.Fatalf("tn stored as %+v", u)
+	}
+	out, _ := run("", "list")
+	if !strings.Contains(out, "EMAIL") || !strings.Contains(out, "tn@colabscraft.com") {
+		t.Fatalf("list: %q", out)
+	}
+}

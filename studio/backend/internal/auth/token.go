@@ -18,7 +18,8 @@ import (
 //
 //	| Claim | Why |
 //	| sub   | the user id |
-//	| sah   | a hash of the stored password hash: a password change ends every other session |
+//	| sah   | a hash of how the account signs in (its password hash and its Google tie): a new password, |
+//	|       | or a Google account tied, untied or changed, ends every other session                       |
 //	| iat   | read by the sliding renewal |
 //	| exp   | the idle window |
 //
@@ -26,10 +27,10 @@ import (
 // an account off takes effect at its next request. Wall-clock time: a credential's life is a real
 // duration.
 
-// sessionAuthHash binds a token to the password it was issued under.
-func sessionAuthHash(secret []byte, passwordHash string) string {
+// sessionAuthHash binds a token to the account's sign-in credentials it was issued under (credential).
+func sessionAuthHash(secret []byte, credential string) string {
 	m := hmac.New(sha256.New, secret)
-	m.Write([]byte("casestudio.session|" + passwordHash))
+	m.Write([]byte("casestudio.session|" + credential))
 	return hex.EncodeToString(m.Sum(nil))
 }
 
@@ -44,11 +45,11 @@ type token struct {
 	now      func() time.Time
 }
 
-func (t token) issue(userID int64, passwordHash string) (string, time.Time, error) {
+func (t token) issue(userID int64, credential string) (string, time.Time, error) {
 	now := t.now()
 	exp := now.Add(t.lifetime)
 	c := claims{
-		Sah: sessionAuthHash(t.secret, passwordHash),
+		Sah: sessionAuthHash(t.secret, credential),
 		RegisteredClaims: jwt.RegisteredClaims{
 			Subject:   strconv.FormatInt(userID, 10),
 			IssuedAt:  jwt.NewNumericDate(now),
