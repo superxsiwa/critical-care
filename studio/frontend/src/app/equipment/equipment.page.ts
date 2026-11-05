@@ -1,7 +1,7 @@
 import { Component, computed, inject, signal } from '@angular/core';
-import { MetaStore } from '../api/meta';
+import { equipmentList } from '../api/lists';
+import { EquipmentItem } from '../api/types';
 import { Toasts } from '../ui/toast';
-import { EQUIPMENT_CATALOG, EquipmentItem } from './equipment-data';
 
 type ViewMode = 'card' | 'list';
 
@@ -14,7 +14,8 @@ type ViewMode = 'card' | 'list';
         <div>
           <h1 class="text-xl font-bold text-ink">คลังอุปกรณ์และยา (Equipment Catalog)</h1>
           <p class="text-sm text-ink-2">
-            รายการรูปภาพอุปกรณ์ทางการแพทย์ทั้งหมด 16 ชนิดในระบบ สำหรับพยาบาลเลือกนำไปใช้
+            รายการรูปภาพอุปกรณ์ทางการแพทย์ทั้งหมด {{ allItems().length }} ชนิดในระบบ
+            สำหรับพยาบาลเลือกนำไปใช้
           </p>
         </div>
 
@@ -88,7 +89,11 @@ type ViewMode = 'card' | 'list';
       </div>
 
       <!-- Main Content: Card View vs List View -->
-      @if (viewMode() === 'card') {
+      @if (list.resource.isLoading() && !list.resource.hasValue()) {
+        <p class="card p-6 text-ink-2" role="status">กำลังโหลด…</p>
+      } @else if (list.resource.error()) {
+        <p class="card p-6 text-rose-700">โหลดรายการอุปกรณ์ไม่สำเร็จ</p>
+      } @else if (viewMode() === 'card') {
         <!-- มุมมองการ์ด (Card View / Grid) -->
         <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
           @for (item of filtered(); track item.file) {
@@ -179,25 +184,15 @@ type ViewMode = 'card' | 'list';
   `,
 })
 export class EquipmentPage {
-  private readonly meta = inject(MetaStore);
   private readonly toasts = inject(Toasts);
+  protected readonly list = equipmentList();
 
   protected readonly viewMode = signal<ViewMode>('card');
   protected readonly query = signal('');
   protected readonly selectedCategory = signal('ทั้งหมด');
 
-  protected readonly allItems = computed<EquipmentItem[]>(() => {
-    const list = this.meta.equipment();
-    return list.map((file) => {
-      const info = EQUIPMENT_CATALOG[file];
-      return {
-        file,
-        nameTh: info?.nameTh ?? file.replace(/\.png$/, '').replaceAll('_', ' '),
-        nameEn: info?.nameEn ?? file,
-        category: info?.category ?? 'อุปกรณ์ทั่วไป',
-      };
-    });
-  });
+  /** The names on the server (จัดการอุปกรณ์ changes them), one per picture of the app. */
+  protected readonly allItems = computed<EquipmentItem[]>(() => this.list.items());
 
   protected readonly categories = computed(() => {
     const set = new Set<string>(['ทั้งหมด']);

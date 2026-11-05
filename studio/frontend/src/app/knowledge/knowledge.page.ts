@@ -1,5 +1,7 @@
 import { Component, computed, signal } from '@angular/core';
-import { INITIAL_ARTICLES, KnowledgeArticle } from './knowledge-data';
+import { knowledgeList } from '../api/lists';
+import { KnowledgeArticle } from '../api/types';
+import { formatDate } from '../ui/words';
 
 type KnowledgeViewMode = 'folder' | 'list' | 'card';
 
@@ -81,6 +83,12 @@ type KnowledgeViewMode = 'folder' | 'list' | 'card';
         <span class="text-xs text-ink-3">ทั้งหมด {{ filtered().length }} บทเรียน</span>
       </div>
 
+      @if (list.resource.isLoading() && !list.resource.hasValue()) {
+        <p class="card p-6 text-ink-2" role="status">กำลังโหลด…</p>
+      } @else if (list.resource.error()) {
+        <p class="card p-6 text-rose-700">โหลดคลังความรู้ไม่สำเร็จ</p>
+      }
+
       <!-- VIEW 1: Folder View (จัดกลุ่มตามหมวดหมู่ คล้าย Folder) -->
       @if (viewMode() === 'folder') {
         <div class="space-y-3">
@@ -133,12 +141,16 @@ type KnowledgeViewMode = 'folder' | 'list' | 'card';
                 </div>
               }
             </div>
+          } @empty {
+            @if (list.resource.hasValue()) {
+              <div class="card p-8 text-center text-ink-2">ยังไม่มีเอกสารในคลังความรู้</div>
+            }
           }
         </div>
       }
 
       <!-- VIEW 2: List View (มุมมองรายการ) -->
-      @if (viewMode() === 'list') {
+      @if (viewMode() === 'list' && list.resource.hasValue()) {
         <section class="card overflow-x-auto" aria-label="รายการเอกสารความรู้">
           <table class="w-full text-left text-sm">
             <thead>
@@ -160,7 +172,7 @@ type KnowledgeViewMode = 'folder' | 'list' | 'card';
                   <td class="px-4 py-2.5 text-xs text-ink-2 max-w-xs truncate">
                     {{ art.summary }}
                   </td>
-                  <td class="px-4 py-2.5 text-xs text-ink-3">{{ art.updatedAt }}</td>
+                  <td class="px-4 py-2.5 text-xs text-ink-3">{{ day(art.updatedAt) }}</td>
                   <td class="px-4 py-2.5 text-right">
                     <button
                       type="button"
@@ -184,7 +196,7 @@ type KnowledgeViewMode = 'folder' | 'list' | 'card';
       }
 
       <!-- VIEW 3: Card View (มุมมองการ์ด) -->
-      @if (viewMode() === 'card') {
+      @if (viewMode() === 'card' && list.resource.hasValue()) {
         <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3">
           @for (art of filtered(); track art.id) {
             <div class="card p-4 hover:shadow-md transition flex flex-col justify-between">
@@ -196,7 +208,7 @@ type KnowledgeViewMode = 'folder' | 'list' | 'card';
                 </p>
               </div>
               <div class="mt-4 pt-3 border-t border-line flex items-center justify-between text-xs">
-                <span class="text-ink-3">{{ art.updatedAt }}</span>
+                <span class="text-ink-3">{{ day(art.updatedAt) }}</span>
                 <button
                   type="button"
                   class="btn btn-primary text-xs"
@@ -246,7 +258,7 @@ type KnowledgeViewMode = 'folder' | 'list' | 'card';
               <p class="pt-2 whitespace-pre-line text-ink">{{ art.content }}</p>
             </div>
             <div class="flex justify-between items-center pt-3 border-t border-line">
-              <span class="text-xs text-ink-3">ปรับปรุงล่าสุด: {{ art.updatedAt }}</span>
+              <span class="text-xs text-ink-3">ปรับปรุงล่าสุด: {{ day(art.updatedAt) }}</span>
               <button
                 type="button"
                 class="btn btn-primary text-xs"
@@ -264,13 +276,13 @@ type KnowledgeViewMode = 'folder' | 'list' | 'card';
 export class KnowledgePage {
   protected readonly viewMode = signal<KnowledgeViewMode>('folder');
   protected readonly query = signal('');
-  protected readonly articles = signal<KnowledgeArticle[]>(INITIAL_ARTICLES);
+  /** The articles on the server (จัดการคลังความรู้ changes them). */
+  protected readonly list = knowledgeList();
+  protected readonly articles = this.list.items;
   protected readonly activeArticle = signal<KnowledgeArticle | null>(null);
 
-  // Expanded folders (categories)
-  private readonly expandedCats = signal<Set<string>>(
-    new Set(['โครงสร้างเคส', 'กลไกภารกิจ', 'สัญญาณชีพ', 'การสื่อสาร']),
-  );
+  // Folders (categories) the reader closed; every folder starts open, a new category too.
+  private readonly collapsedCats = signal<Set<string>>(new Set());
 
   protected readonly categories = computed(() => {
     const set = new Set<string>();
@@ -297,14 +309,18 @@ export class KnowledgePage {
   }
 
   protected isExpanded(cat: string): boolean {
-    return this.expandedCats().has(cat);
+    return !this.collapsedCats().has(cat);
   }
 
   protected toggleFolder(cat: string): void {
-    const next = new Set(this.expandedCats());
+    const next = new Set(this.collapsedCats());
     if (next.has(cat)) next.delete(cat);
     else next.add(cat);
-    this.expandedCats.set(next);
+    this.collapsedCats.set(next);
+  }
+
+  protected day(iso: string): string {
+    return formatDate(iso);
   }
 
   protected updateQuery(e: Event): void {
