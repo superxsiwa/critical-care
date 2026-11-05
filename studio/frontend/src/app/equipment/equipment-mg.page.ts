@@ -1,8 +1,22 @@
 import { Component, computed, inject, signal } from '@angular/core';
+import { equipmentList } from '../api/lists';
 import { MetaStore } from '../api/meta';
+import { ApiError, StudioApi } from '../api/studio-api';
+import { EquipmentItem } from '../api/types';
 import { Confirm } from '../ui/confirm';
 import { Toasts } from '../ui/toast';
-import { EQUIPMENT_CATALOG, EquipmentItem } from './equipment-data';
+import { failure } from '../ui/words';
+
+/** The add / edit form: a new entry names a picture that has none yet; an entry's picture stays. */
+interface EquipmentForm {
+  isNew: boolean;
+  id: number;
+  version: number;
+  nameTh: string;
+  nameEn: string;
+  category: string;
+  file: string;
+}
 
 @Component({
   selector: 'cs-equipment-mg-page',
@@ -33,7 +47,18 @@ import { EQUIPMENT_CATALOG, EquipmentItem } from './equipment-data';
             </tr>
           </thead>
           <tbody>
-            @for (item of items(); track item.file) {
+            @if (list.resource.isLoading() && !list.resource.hasValue()) {
+              <tr>
+                <td colspan="6" class="p-8 text-center text-ink-2" role="status">กำลังโหลด…</td>
+              </tr>
+            } @else if (list.resource.error()) {
+              <tr>
+                <td colspan="6" class="p-8 text-center text-rose-700">
+                  โหลดรายการอุปกรณ์ไม่สำเร็จ
+                </td>
+              </tr>
+            }
+            @for (item of items(); track item.id) {
               <tr class="border-b border-sky-100 last:border-0 hover:bg-sky-50/60">
                 <td class="px-4 py-2">
                   <div
@@ -76,9 +101,11 @@ import { EQUIPMENT_CATALOG, EquipmentItem } from './equipment-data';
                 </td>
               </tr>
             } @empty {
-              <tr>
-                <td colspan="6" class="p-8 text-center text-ink-2">ยังไม่มีอุปกรณ์ในรายการ</td>
-              </tr>
+              @if (list.resource.hasValue()) {
+                <tr>
+                  <td colspan="6" class="p-8 text-center text-ink-2">ยังไม่มีอุปกรณ์ในรายการ</td>
+                </tr>
+              }
             }
           </tbody>
         </table>
@@ -198,16 +225,35 @@ import { EQUIPMENT_CATALOG, EquipmentItem } from './equipment-data';
 
               <div>
                 <label for="eq-file" class="label">ชื่อไฟล์รูปภาพ (.png)</label>
-                <input
-                  id="eq-file"
-                  type="text"
-                  class="input font-mono"
-                  [disabled]="!f.isNew"
-                  [value]="f.file"
-                  (input)="f.file = val($event)"
-                  placeholder="เช่น bp_monitor.png"
-                />
-                @if (!f.isNew) {
+                @if (f.isNew) {
+                  <!-- Only the app's own pictures: a case can show no other. -->
+                  <select
+                    id="eq-file"
+                    class="input font-mono"
+                    [disabled]="!freePictures().length"
+                    (change)="f.file = val($event)"
+                    aria-describedby="eq-file-hint"
+                  >
+                    <option value="" [selected]="!f.file">เลือกรูปภาพ…</option>
+                    @for (file of freePictures(); track file) {
+                      <option [value]="file" [selected]="f.file === file">{{ file }}</option>
+                    }
+                  </select>
+                  <span id="eq-file-hint" class="text-[11px] text-ink-3">
+                    @if (freePictures().length) {
+                      เลือกได้เฉพาะรูปอุปกรณ์ที่มีในแอปและยังไม่มีชื่อ
+                    } @else {
+                      รูปอุปกรณ์ทุกรูปในแอปมีชื่อแล้ว: ลบรายการของรูปนั้นก่อน จึงเพิ่มใหม่ได้
+                    }
+                  </span>
+                } @else {
+                  <input
+                    id="eq-file"
+                    type="text"
+                    class="input font-mono"
+                    disabled
+                    [value]="f.file"
+                  />
                   <span class="text-[11px] text-ink-3">ไม่สามารถเปลี่ยนชื่อไฟล์รูปภาพเดิมได้</span>
                 }
               </div>
@@ -215,7 +261,12 @@ import { EQUIPMENT_CATALOG, EquipmentItem } from './equipment-data';
 
             <div class="flex justify-end gap-2 pt-3 border-t border-line">
               <button type="button" class="btn text-xs" (click)="editing.set(null)">ยกเลิก</button>
-              <button type="button" class="btn btn-primary text-xs" (click)="saveEdit(f)">
+              <button
+                type="button"
+                class="btn btn-primary text-xs"
+                [disabled]="busy()"
+                (click)="saveEdit(f)"
+              >
                 บันทึกอุปกรณ์
               </button>
             </div>
@@ -226,37 +277,26 @@ import { EQUIPMENT_CATALOG, EquipmentItem } from './equipment-data';
   `,
 })
 export class EquipmentMgPage {
+  private readonly api = inject(StudioApi);
   private readonly meta = inject(MetaStore);
   private readonly confirm = inject(Confirm);
   private readonly toasts = inject(Toasts);
 
-  protected readonly items = signal<EquipmentItem[]>([]);
+  /** The entries on the server, by picture. */
+  protected readonly list = equipmentList();
+  protected readonly items = this.list.items;
   protected readonly viewing = signal<EquipmentItem | null>(null);
-  protected readonly editing = signal<{
-    isNew: boolean;
-    nameTh: string;
-    nameEn: string;
-    category: string;
-    file: string;
-  } | null>(null);
+  protected readonly editing = signal<EquipmentForm | null>(null);
+  protected readonly busy = signal(false);
 
-  constructor() {
-    // Populate items from meta and catalog
-    const list = this.meta.equipment();
-    const initial = list.map((file) => {
-      const info = EQUIPMENT_CATALOG[file];
-      return {
-        file,
-        nameTh: info?.nameTh ?? file.replace(/\.png$/, '').replaceAll('_', ' '),
-        nameEn: info?.nameEn ?? file,
-        category: info?.category ?? 'อุปกรณ์ทั่วไป',
-      };
-    });
-    this.items.set(initial);
-  }
+  /** The app's pictures that have no entry: the only ones a new entry can name. */
+  protected readonly freePictures = computed(() => {
+    const named = new Set(this.items().map((it) => it.file));
+    return this.meta.equipment().filter((file) => !named.has(file));
+  });
 
   protected val(e: Event): string {
-    return (e.target as HTMLInputElement).value;
+    return (e.target as HTMLInputElement | HTMLSelectElement).value;
   }
 
   protected viewDetails(item: EquipmentItem): void {
@@ -266,6 +306,8 @@ export class EquipmentMgPage {
   protected openAddModal(): void {
     this.editing.set({
       isNew: true,
+      id: 0,
+      version: 0,
       nameTh: '',
       nameEn: '',
       category: 'อุปกรณ์ทั่วไป',
@@ -276,6 +318,8 @@ export class EquipmentMgPage {
   protected editItem(item: EquipmentItem): void {
     this.editing.set({
       isNew: false,
+      id: item.id,
+      version: item.version,
       nameTh: item.nameTh,
       nameEn: item.nameEn,
       category: item.category,
@@ -283,49 +327,37 @@ export class EquipmentMgPage {
     });
   }
 
-  protected saveEdit(form: {
-    isNew: boolean;
-    nameTh: string;
-    nameEn: string;
-    category: string;
-    file: string;
-  }): void {
+  /** Saves on the server. A refusal keeps the form open (nothing typed is lost) and says why. */
+  protected async saveEdit(form: EquipmentForm): Promise<void> {
     if (!form.nameTh.trim()) {
       this.toasts.show('กรุณาระบุชื่ออุปกรณ์ภาษาไทย', true);
       return;
     }
-    if (form.isNew && !form.file.trim()) {
-      this.toasts.show('กรุณาระบุชื่อไฟล์รูปภาพ', true);
+    if (form.isNew && !form.file) {
+      this.toasts.show('กรุณาเลือกรูปภาพ', true);
       return;
     }
-    const cleanFile = form.file.endsWith('.png') ? form.file : `${form.file}.png`;
-    if (form.isNew) {
-      this.items.update((list) => [
-        ...list,
-        {
-          file: cleanFile,
-          nameTh: form.nameTh,
-          nameEn: form.nameEn || cleanFile,
-          category: form.category || 'อุปกรณ์ทั่วไป',
-        },
-      ]);
-      this.toasts.show('เพิ่มอุปกรณ์ใหม่เรียบร้อยแล้ว');
-    } else {
-      this.items.update((list) =>
-        list.map((it) =>
-          it.file === form.file
-            ? {
-                ...it,
-                nameTh: form.nameTh,
-                nameEn: form.nameEn,
-                category: form.category,
-              }
-            : it,
-        ),
-      );
-      this.toasts.show('แก้ไขข้อมูลอุปกรณ์เรียบร้อยแล้ว');
+    const names = {
+      nameTh: form.nameTh,
+      nameEn: form.isNew ? form.nameEn || form.file : form.nameEn,
+      category: form.category.trim() || 'อุปกรณ์ทั่วไป',
+    };
+    this.busy.set(true);
+    try {
+      if (form.isNew) {
+        await this.api.addEquipment(form.file, names);
+        this.toasts.show('เพิ่มอุปกรณ์ใหม่เรียบร้อยแล้ว');
+      } else {
+        await this.api.changeEquipment(form.id, form.version, names);
+        this.toasts.show('แก้ไขข้อมูลอุปกรณ์เรียบร้อยแล้ว');
+      }
+      this.editing.set(null);
+    } catch (e) {
+      this.toasts.show('บันทึกไม่สำเร็จ: ' + failure(e), true);
+    } finally {
+      this.busy.set(false);
+      this.list.resource.reload();
     }
-    this.editing.set(null);
   }
 
   protected async deleteItem(item: EquipmentItem): Promise<void> {
@@ -336,7 +368,13 @@ export class EquipmentMgPage {
       danger: true,
     });
     if (!yes) return;
-    this.items.update((list) => list.filter((it) => it.file !== item.file));
-    this.toasts.show('ลบอุปกรณ์เรียบร้อยแล้ว');
+    try {
+      await this.api.removeEquipment(item.id, item.version);
+      this.toasts.show('ลบอุปกรณ์เรียบร้อยแล้ว');
+    } catch (e) {
+      const gone = e instanceof ApiError && e.code === 'not-found';
+      this.toasts.show(gone ? 'อุปกรณ์นี้ถูกลบไปแล้ว' : 'ลบไม่สำเร็จ: ' + failure(e), !gone);
+    }
+    this.list.resource.reload();
   }
 }

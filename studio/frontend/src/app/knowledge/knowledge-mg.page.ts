@@ -1,7 +1,21 @@
 import { Component, inject, signal } from '@angular/core';
+import { knowledgeList } from '../api/lists';
+import { ApiError, StudioApi } from '../api/studio-api';
+import { KnowledgeArticle } from '../api/types';
 import { Confirm } from '../ui/confirm';
 import { Toasts } from '../ui/toast';
-import { INITIAL_ARTICLES, KnowledgeArticle } from './knowledge-data';
+import { failure, formatDate } from '../ui/words';
+
+/** The add / edit form. */
+interface ArticleForm {
+  isNew: boolean;
+  id: number;
+  version: number;
+  title: string;
+  category: string;
+  summary: string;
+  content: string;
+}
 
 @Component({
   selector: 'cs-knowledge-mg-page',
@@ -33,6 +47,15 @@ import { INITIAL_ARTICLES, KnowledgeArticle } from './knowledge-data';
             </tr>
           </thead>
           <tbody>
+            @if (list.resource.isLoading() && !list.resource.hasValue()) {
+              <tr>
+                <td colspan="5" class="p-8 text-center text-ink-2" role="status">กำลังโหลด…</td>
+              </tr>
+            } @else if (list.resource.error()) {
+              <tr>
+                <td colspan="5" class="p-8 text-center text-rose-700">โหลดคลังความรู้ไม่สำเร็จ</td>
+              </tr>
+            }
             @for (art of articles(); track art.id) {
               <tr class="border-b border-sky-100 last:border-0 hover:bg-sky-50/60">
                 <td class="px-4 py-2.5 font-medium text-ink">{{ art.title }}</td>
@@ -40,7 +63,12 @@ import { INITIAL_ARTICLES, KnowledgeArticle } from './knowledge-data';
                   <span class="badge badge-plain text-xs">{{ art.category }}</span>
                 </td>
                 <td class="px-4 py-2.5 text-xs text-ink-2 max-w-xs truncate">{{ art.summary }}</td>
-                <td class="px-4 py-2.5 text-xs text-ink-3">{{ art.updatedAt }}</td>
+                <td class="px-4 py-2.5 text-xs text-ink-3">
+                  {{ day(art.updatedAt) }}
+                  @if (art.updatedBy) {
+                    <span class="block">{{ art.updatedBy }}</span>
+                  }
+                </td>
                 <td class="whitespace-nowrap px-4 py-2.5 text-right">
                   <div class="inline-flex gap-1">
                     <button type="button" class="btn btn-ghost text-xs" (click)="viewDetails(art)">
@@ -64,9 +92,13 @@ import { INITIAL_ARTICLES, KnowledgeArticle } from './knowledge-data';
                 </td>
               </tr>
             } @empty {
-              <tr>
-                <td colspan="5" class="p-8 text-center text-ink-2">ยังไม่มีเอกสารในคลังความรู้</td>
-              </tr>
+              @if (list.resource.hasValue()) {
+                <tr>
+                  <td colspan="5" class="p-8 text-center text-ink-2">
+                    ยังไม่มีเอกสารในคลังความรู้
+                  </td>
+                </tr>
+              }
             }
           </tbody>
         </table>
@@ -187,7 +219,12 @@ import { INITIAL_ARTICLES, KnowledgeArticle } from './knowledge-data';
 
             <div class="flex justify-end gap-2 pt-3 border-t border-line">
               <button type="button" class="btn text-xs" (click)="editing.set(null)">ยกเลิก</button>
-              <button type="button" class="btn btn-primary text-xs" (click)="saveEdit(f)">
+              <button
+                type="button"
+                class="btn btn-primary text-xs"
+                [disabled]="busy()"
+                (click)="saveEdit(f)"
+              >
                 บันทึกเอกสาร
               </button>
             </div>
@@ -198,22 +235,23 @@ import { INITIAL_ARTICLES, KnowledgeArticle } from './knowledge-data';
   `,
 })
 export class KnowledgeMgPage {
+  private readonly api = inject(StudioApi);
   private readonly confirm = inject(Confirm);
   private readonly toasts = inject(Toasts);
 
-  protected readonly articles = signal<KnowledgeArticle[]>(INITIAL_ARTICLES);
+  /** The articles on the server. */
+  protected readonly list = knowledgeList();
+  protected readonly articles = this.list.items;
   protected readonly viewing = signal<KnowledgeArticle | null>(null);
-  protected readonly editing = signal<{
-    isNew: boolean;
-    id: string;
-    title: string;
-    category: string;
-    summary: string;
-    content: string;
-  } | null>(null);
+  protected readonly editing = signal<ArticleForm | null>(null);
+  protected readonly busy = signal(false);
 
   protected val(e: Event): string {
     return (e.target as HTMLInputElement | HTMLTextAreaElement).value;
+  }
+
+  protected day(iso: string): string {
+    return formatDate(iso);
   }
 
   protected viewDetails(art: KnowledgeArticle): void {
@@ -223,7 +261,8 @@ export class KnowledgeMgPage {
   protected openAddModal(): void {
     this.editing.set({
       isNew: true,
-      id: 'k' + (this.articles().length + 1),
+      id: 0,
+      version: 0,
       title: '',
       category: 'ทั่วไป',
       summary: '',
@@ -235,6 +274,7 @@ export class KnowledgeMgPage {
     this.editing.set({
       isNew: false,
       id: art.id,
+      version: art.version,
       title: art.title,
       category: art.category,
       summary: art.summary,
@@ -242,50 +282,34 @@ export class KnowledgeMgPage {
     });
   }
 
-  protected saveEdit(form: {
-    isNew: boolean;
-    id: string;
-    title: string;
-    category: string;
-    summary: string;
-    content: string;
-  }): void {
+  /** Saves on the server. A refusal keeps the form open (nothing typed is lost) and says why. */
+  protected async saveEdit(form: ArticleForm): Promise<void> {
     if (!form.title.trim()) {
       this.toasts.show('กรุณาระบุหัวข้อความรู้', true);
       return;
     }
-    const today = new Date().toISOString().slice(0, 10);
-    if (form.isNew) {
-      this.articles.update((list) => [
-        ...list,
-        {
-          id: form.id,
-          title: form.title,
-          category: form.category || 'ทั่วไป',
-          summary: form.summary,
-          content: form.content,
-          updatedAt: today,
-        },
-      ]);
-      this.toasts.show('เพิ่มเอกสารความรู้เรียบร้อยแล้ว');
-    } else {
-      this.articles.update((list) =>
-        list.map((a) =>
-          a.id === form.id
-            ? {
-                ...a,
-                title: form.title,
-                category: form.category || a.category,
-                summary: form.summary,
-                content: form.content,
-                updatedAt: today,
-              }
-            : a,
-        ),
-      );
-      this.toasts.show('แก้ไขเอกสารเรียบร้อยแล้ว');
+    const text = {
+      title: form.title,
+      category: form.category.trim() || 'ทั่วไป',
+      summary: form.summary,
+      content: form.content,
+    };
+    this.busy.set(true);
+    try {
+      if (form.isNew) {
+        await this.api.addArticle(text);
+        this.toasts.show('เพิ่มเอกสารความรู้เรียบร้อยแล้ว');
+      } else {
+        await this.api.changeArticle(form.id, form.version, text);
+        this.toasts.show('แก้ไขเอกสารเรียบร้อยแล้ว');
+      }
+      this.editing.set(null);
+    } catch (e) {
+      this.toasts.show('บันทึกไม่สำเร็จ: ' + failure(e), true);
+    } finally {
+      this.busy.set(false);
+      this.list.resource.reload();
     }
-    this.editing.set(null);
   }
 
   protected async deleteArticle(art: KnowledgeArticle): Promise<void> {
@@ -296,7 +320,13 @@ export class KnowledgeMgPage {
       danger: true,
     });
     if (!yes) return;
-    this.articles.update((list) => list.filter((a) => a.id !== art.id));
-    this.toasts.show('ลบเอกสารเรียบร้อยแล้ว');
+    try {
+      await this.api.removeArticle(art.id, art.version);
+      this.toasts.show('ลบเอกสารเรียบร้อยแล้ว');
+    } catch (e) {
+      const gone = e instanceof ApiError && e.code === 'not-found';
+      this.toasts.show(gone ? 'เอกสารนี้ถูกลบไปแล้ว' : 'ลบไม่สำเร็จ: ' + failure(e), !gone);
+    }
+    this.list.resource.reload();
   }
 }

@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"casestudio/internal/auth"
+	"casestudio/internal/catalog"
 	"casestudio/internal/drafts"
 	"casestudio/internal/httpx"
 	"casestudio/internal/web"
@@ -31,6 +32,7 @@ func New(d Deps) http.Handler {
 	signIn := auth.New(d.DB, d.Log, d.Secret, d.Now, d.Google)
 	signIn.Mount(mux)
 	(&drafts.Service{DB: d.DB, Log: d.Log, Now: d.Now}).Mount(mux)
+	(&catalog.Service{DB: d.DB, Log: d.Log, Now: d.Now}).Mount(mux)
 	mux.HandleFunc("/api/", func(w http.ResponseWriter, r *http.Request) {
 		httpx.Refuse(w, http.StatusNotFound, "No such API route", "not-found")
 	})

@@ -21,6 +21,13 @@ const REFUSALS: Record<string, string> = {
   'email-bad': 'อีเมลนี้ไม่ถูกต้อง',
   'email-taken': 'บัญชีอื่นใช้อีเมลนี้แล้ว',
   'no-sign-in': 'ใส่อีเมล Google หรือรหัสผ่าน อย่างน้อยอย่างหนึ่ง เพื่อให้เข้าสู่ระบบได้',
+  stale: 'มีผู้อื่นแก้ไขรายการนี้หลังจากที่หน้าโหลด: ดูรายการใหม่แล้วลองอีกครั้ง',
+  'picture-unknown': 'รูปอุปกรณ์ต้องเลือกจากรายการที่มีในแอป',
+  'picture-taken': 'รูปนี้มีชื่ออุปกรณ์อยู่แล้ว',
+  'nameTh-blank': 'กรุณาระบุชื่ออุปกรณ์ภาษาไทย',
+  'title-blank': 'กรุณาระบุหัวข้อความรู้',
+  'category-blank': 'กรุณาระบุหมวดหมู่',
+  'too-long': 'ข้อความยาวเกินไป',
 };
 
 /** Why a Google sign-in was refused (the server's /signin?google=<code>), in the screen's words. */
@@ -51,4 +58,11 @@ export function formatTime(iso: string): string {
   const d = new Date(iso);
   if (Number.isNaN(d.getTime())) return '';
   return new Intl.DateTimeFormat('th-TH', { dateStyle: 'medium', timeStyle: 'short' }).format(d);
+}
+
+/** A day, as the lists show when something was last changed. */
+export function formatDate(iso: string): string {
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return '';
+  return new Intl.DateTimeFormat('th-TH', { dateStyle: 'medium' }).format(d);
 }

@@ -25,11 +25,20 @@ const PAGES: [string, RegExp][] = [
   ['/equipment-mg', /^จัดการอุปกรณ์และยา/],
 ];
 
+/** The catalog pages' first entry, shown once their list has loaded from the server. */
+const LOADED: Record<string, string> = {
+  '/equipment': 'เครื่องวัดความดันโลหิต',
+  '/equipment-mg': 'เครื่องวัดความดันโลหิต',
+  '/knowledge': 'โครงสร้างเคสมาตรฐาน 6 ขั้นตอนใน CCU',
+  '/knowledge-mg': 'โครงสร้างเคสมาตรฐาน 6 ขั้นตอนใน CCU',
+};
+
 test('every page of the menu passes axe, empty and with drafts', async ({ page, studio }) => {
   test.setTimeout(60_000); // 18 axe runs
   for (const [path, heading] of PAGES) {
     await page.goto(path);
     await expect(page.getByRole('heading', { level: 1 })).toHaveText(heading);
+    if (LOADED[path]) await expect(page.getByText(LOADED[path]).first()).toBeVisible();
     expect(await violations(page), `${path} (empty)`).toEqual([]);
   }
   await studio.importExample('valid/package-two-beds.json');
@@ -54,6 +63,30 @@ test('every page of the menu passes axe, empty and with drafts', async ({ page, 
     await expect(button).toHaveAttribute('aria-pressed', 'true');
     expect(await violations(page), `${path} ${view}`).toEqual([]);
   }
+});
+
+test('the dialogs of the equipment and knowledge pages pass axe', async ({ page }) => {
+  await page.goto('/equipment-mg');
+  await page
+    .getByRole('row')
+    .filter({ hasText: 'bp_monitor.png' })
+    .getByRole('button', { name: 'แก้ไข' })
+    .click();
+  await expect(page.getByRole('dialog', { name: 'แก้ไขข้อมูลอุปกรณ์' })).toBeVisible();
+  expect(await violations(page), 'equipment: change').toEqual([]);
+  await page.getByRole('button', { name: 'ยกเลิก' }).click();
+  await page.getByRole('button', { name: '+ เพิ่มอุปกรณ์ใหม่' }).click();
+  await expect(page.getByRole('dialog', { name: 'เพิ่มอุปกรณ์ใหม่' })).toBeVisible();
+  expect(await violations(page), 'equipment: add (no picture free)').toEqual([]);
+
+  await page.goto('/knowledge-mg');
+  await page.getByRole('button', { name: '+ เพิ่มเอกสารความรู้ใหม่' }).click();
+  await expect(page.getByRole('dialog', { name: 'เพิ่มเอกสารความรู้ใหม่' })).toBeVisible();
+  expect(await violations(page), 'knowledge: add').toEqual([]);
+  await page.getByRole('button', { name: 'ยกเลิก' }).click();
+  await page.getByRole('button', { name: 'ดูรายละเอียด' }).first().click();
+  await expect(page.getByRole('dialog')).toBeVisible();
+  expect(await violations(page), 'knowledge: details').toEqual([]);
 });
 
 test('the account menu and the profile pass axe; Escape closes them', async ({ page }) => {

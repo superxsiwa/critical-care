@@ -70,3 +70,39 @@ export interface Account extends Me {
   active: boolean;
   createdAt: string;
 }
+
+/**
+ * The name of one of the app's equipment pictures (studio/backend/internal/catalog). The studio's
+ * own: it never goes into the package. Its picture (file) never changes once added.
+ */
+export interface EquipmentItem {
+  id: number;
+  /** One of the app's pictures, such as syringe.png. */
+  file: string;
+  nameTh: string;
+  nameEn: string;
+  category: string;
+  version: number;
+  updatedAt: string;
+  /** Who changed it last ("" for the built-in names). */
+  updatedBy: string;
+}
+
+/** What an author writes of an equipment entry. */
+export type EquipmentNames = Pick<EquipmentItem, 'nameTh' | 'nameEn' | 'category'>;
+
+/** A knowledge article for authors. The studio's own: it never goes into the package. */
+export interface KnowledgeArticle {
+  id: number;
+  title: string;
+  category: string;
+  summary: string;
+  content: string;
+  version: number;
+  updatedAt: string;
+  /** Who changed it last ("" for the built-in articles). */
+  updatedBy: string;
+}
+
+/** What an author writes of an article. */
+export type ArticleText = Pick<KnowledgeArticle, 'title' | 'category' | 'summary' | 'content'>;

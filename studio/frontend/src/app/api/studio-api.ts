@@ -1,7 +1,17 @@
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Service, inject } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
-import { Account, Draft, JsonObject, Problem, Refusal } from './types';
+import {
+  Account,
+  ArticleText,
+  Draft,
+  EquipmentItem,
+  EquipmentNames,
+  JsonObject,
+  KnowledgeArticle,
+  Problem,
+  Refusal,
+} from './types';
 
 /** A refused request: the HTTP status and the server's body (status 0: the server did not answer). */
 export class ApiError extends Error {
@@ -125,6 +135,47 @@ export class StudioApi {
   /** An admin sets a new password for an account; its sessions end. */
   resetPassword(id: number, password: string): Promise<void> {
     return call(firstValueFrom(this.http.put<void>(`/api/users/${id}/password`, { password })));
+  }
+
+  /** Names a picture that has none yet; refused with 409 `picture-taken` when it has one. */
+  addEquipment(file: string, names: EquipmentNames): Promise<EquipmentItem> {
+    return call(
+      firstValueFrom(this.http.post<EquipmentItem>('/api/equipment', { file, ...names })),
+    );
+  }
+
+  /** Changes an entry's names; refused with 409 `stale` when someone changed it since `version`. */
+  changeEquipment(id: number, version: number, names: EquipmentNames): Promise<EquipmentItem> {
+    return call(
+      firstValueFrom(this.http.put<EquipmentItem>(`/api/equipment/${id}`, { version, ...names })),
+    );
+  }
+
+  removeEquipment(id: number, version: number): Promise<void> {
+    return call(
+      firstValueFrom(
+        this.http.delete<void>(`/api/equipment/${id}`, { params: { version: String(version) } }),
+      ),
+    );
+  }
+
+  addArticle(text: ArticleText): Promise<KnowledgeArticle> {
+    return call(firstValueFrom(this.http.post<KnowledgeArticle>('/api/knowledge', text)));
+  }
+
+  /** Changes an article; refused with 409 `stale` when someone changed it since `version`. */
+  changeArticle(id: number, version: number, text: ArticleText): Promise<KnowledgeArticle> {
+    return call(
+      firstValueFrom(this.http.put<KnowledgeArticle>(`/api/knowledge/${id}`, { version, ...text })),
+    );
+  }
+
+  removeArticle(id: number, version: number): Promise<void> {
+    return call(
+      firstValueFrom(
+        this.http.delete<void>(`/api/knowledge/${id}`, { params: { version: String(version) } }),
+      ),
+    );
   }
 
   /** Every draft as one package, only if the app would accept it (else 422 with the problems). */

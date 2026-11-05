@@ -20,6 +20,32 @@ type Draft struct {
 	UpdatedBy sql.NullInt64
 }
 
+type Equipment struct {
+	ID        int64
+	File      string
+	NameTh    string
+	NameEn    string
+	Category  string
+	Version   int64
+	CreatedAt string
+	UpdatedAt string
+	CreatedBy sql.NullInt64
+	UpdatedBy sql.NullInt64
+}
+
+type Knowledge struct {
+	ID        int64
+	Title     string
+	Category  string
+	Summary   string
+	Content   string
+	Version   int64
+	CreatedAt string
+	UpdatedAt string
+	CreatedBy sql.NullInt64
+	UpdatedBy sql.NullInt64
+}
+
 type User struct {
 	ID           int64
 	Username     string
