@@ -15,6 +15,10 @@ import { SignInForm } from './signin-form';
         </p>
         <cs-signin-form (signedIn)="go()" />
       </section>
+      <p class="mt-4 text-center text-xs text-ink-3">
+        <a class="underline" href="/about.html">เกี่ยวกับ Case Studio</a> ·
+        <a class="underline" href="/privacy.html">นโยบายความเป็นส่วนตัว</a>
+      </p>
     </div>
   `,
 })

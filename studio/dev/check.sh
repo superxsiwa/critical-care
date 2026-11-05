@@ -19,7 +19,7 @@ step "go test";    go test -count=1 ./...
 
 cd "$ROOT/frontend"
 step "pnpm install"; pnpm install --frozen-lockfile >/dev/null
-step prettier;     pnpm exec prettier --check "src/**/*.{ts,css,html}" "tests/**/*.ts" playwright.config.ts >/dev/null
+step prettier;     pnpm exec prettier --check "src/**/*.{ts,css,html}" "tests/**/*.ts" "public/*.{html,css}" playwright.config.ts >/dev/null
 step "tsc (tests)"; pnpm exec tsc -p tests/tsconfig.json
 step "ng build (0 warnings)"
 log=$(pnpm exec ng build 2>&1) || { echo "$log"; exit 1; }

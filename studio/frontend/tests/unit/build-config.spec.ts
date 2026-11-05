@@ -34,14 +34,19 @@ test('the dev proxy points at the server default port', () => {
 });
 
 // One copy of the app's pictures, fonts and icons: the app's own, linked (Angular takes no asset
-// folder outside its workspace; dev/build.sh copies with -L).
+// folder outside its workspace; dev/build.sh copies with -L). Beside them only the public pages
+// (about, privacy: plain HTML for Google's consent screen) and their style.
+const PAGES = ['about.html', 'pages.css', 'privacy.html'];
+
 test('public/ links to the app folders, and the pictures are the ones the server knows', () => {
   const links: Record<string, string> = {
     equipment: 'mobile/assets/equipment',
     fonts: 'mobile/assets/fonts',
     icons: 'mobile/web/icons',
   };
-  expect(readdirSync(resolve(FRONTEND, 'public')).sort()).toEqual(Object.keys(links).sort());
+  expect(readdirSync(resolve(FRONTEND, 'public')).sort()).toEqual(
+    [...Object.keys(links), ...PAGES].sort(),
+  );
   for (const [name, target] of Object.entries(links)) {
     readlinkSync(resolve(FRONTEND, 'public', name)); // a link, not a copy
     expect(realpathSync(resolve(FRONTEND, 'public', name))).toBe(resolve(REPO, target));
@@ -52,5 +57,8 @@ test('public/ links to the app folders, and the pictures are the ones the server
   expect(readdirSync(resolve(FRONTEND, 'public/equipment')).sort()).toEqual(known);
   const css = readFileSync(resolve(FRONTEND, 'src/styles.css'), 'utf8');
   for (const m of css.matchAll(/url\("\/fonts\/([^"]+)"\)/g))
+    expect(readdirSync(resolve(FRONTEND, 'public/fonts'))).toContain(m[1]);
+  const pages = readFileSync(resolve(FRONTEND, 'public/pages.css'), 'utf8');
+  for (const m of pages.matchAll(/url\('\/fonts\/([^']+)'\)/g))
     expect(readdirSync(resolve(FRONTEND, 'public/fonts'))).toContain(m[1]);
 });

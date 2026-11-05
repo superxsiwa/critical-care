@@ -113,3 +113,25 @@ test('sign-in, accounts and password pass axe', async ({ page, browser, studio }
   expect(await violations(signedOut), 'sign-in').toEqual([]);
   await out.close();
 });
+
+test('the public pages open signed out, link each other and pass axe', async ({
+  browser,
+  studio,
+}) => {
+  const out = await browser.newContext({ baseURL: studio.url });
+  const page = await out.newPage();
+  await page.goto('/signin');
+  await page.getByRole('link', { name: 'นโยบายความเป็นส่วนตัว' }).click();
+  await expect(page).toHaveURL(/\/privacy\.html$/);
+  await expect(page.getByRole('heading', { level: 1, name: 'Privacy policy' })).toBeVisible();
+  await expect(
+    page.getByRole('heading', { level: 1, name: 'นโยบายความเป็นส่วนตัว' }),
+  ).toBeVisible();
+  expect(await violations(page), 'privacy').toEqual([]);
+  await page.getByRole('link', { name: 'Case Studio' }).first().click();
+  await expect(page).toHaveURL(/\/about\.html$/);
+  expect(await violations(page), 'about').toEqual([]);
+  await page.getByRole('link', { name: 'Sign in' }).click();
+  await expect(page).toHaveURL(/\/signin$/);
+  await out.close();
+});
