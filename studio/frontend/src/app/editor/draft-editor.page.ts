@@ -14,14 +14,14 @@ import { ApiError, StudioApi } from '../api/studio-api';
 import { Json, Problem } from '../api/types';
 import { blankStep, nextStepId } from '../case/blank';
 import { anchorOf, asText, isObject, isWithin, listAt } from '../case/json';
-import { describePath, friendlyMessage, stepOf } from '../case/where';
+import { describePath, stepOf } from '../case/where';
 import { Confirm } from '../ui/confirm';
 import { failure, formatTime } from '../ui/words';
 import { Toasts } from '../ui/toast';
 import { CaseEditor } from './case-editor';
 import { CaseFields } from './case-fields';
 import { BedsidePreview } from './bedside-preview';
-import { ProblemsAt } from './fields';
+import { ProblemText, ProblemsAt } from './fields';
 import { JsonTab } from './json-tab';
 import { StepEditor } from './step';
 
@@ -36,7 +36,7 @@ const CHECK_AFTER_MS = 350;
  */
 @Component({
   selector: 'cs-draft-editor',
-  imports: [RouterLink, CaseFields, StepEditor, JsonTab, ProblemsAt, BedsidePreview],
+  imports: [RouterLink, CaseFields, StepEditor, JsonTab, ProblemsAt, ProblemText, BedsidePreview],
   providers: [CaseEditor],
   host: {
     class: 'block',
@@ -48,7 +48,7 @@ const CHECK_AFTER_MS = 350;
     @if (failed(); as f) {
       <div class="card p-6">
         <p class="text-rose-700">{{ f }}</p>
-        <a routerLink="/" class="btn mt-4">กลับไปรายการเคส</a>
+        <a routerLink="/case-mg" class="btn mt-4">กลับไปรายการเคส</a>
       </div>
     } @else if (!loaded()) {
       <p class="text-ink-2" role="status">กำลังโหลดเคส…</p>
@@ -57,7 +57,7 @@ const CHECK_AFTER_MS = 350;
         class="sticky top-0 z-20 -mx-4 border-b border-line bg-sky-50/95 px-4 py-3 backdrop-blur"
       >
         <div class="flex flex-wrap items-center gap-x-4 gap-y-2">
-          <a routerLink="/" class="btn btn-ghost">← รายการเคส</a>
+          <a routerLink="/case-mg" class="btn btn-ghost">← รายการเคส</a>
           <div class="min-w-0 flex-1">
             <h1 class="truncate text-lg font-semibold">
               @if (bedNum() !== null) {
@@ -179,10 +179,7 @@ const CHECK_AFTER_MS = 350;
                   (click)="goTo(p)"
                 >
                   <span class="font-medium text-ink">{{ where(p) }}</span>
-                  <span class="text-rose-700"> {{ friendly(p.message) }}</span>
-                  <span class="text-xs text-rose-500 font-normal" lang="en">
-                    ({{ p.message }})</span
-                  >
+                  <span class="text-rose-700"> <cs-problem-text [text]="p.message" /></span>
                   <span class="key ml-1" aria-hidden="true">{{ p.path }}</span>
                 </button>
               </li>
@@ -196,7 +193,7 @@ const CHECK_AFTER_MS = 350;
 
       @if (showPreview()) {
         <div class="mt-4">
-          <cs-bedside-preview />
+          <cs-bedside-preview [step]="previewStep()" />
         </div>
       }
 
@@ -302,6 +299,11 @@ export class DraftEditorPage {
   protected readonly tabKind = computed(() =>
     typeof this.tab() === 'number' ? 'step' : this.tab(),
   );
+  /** The step the bedside preview shows: the open one, else the first. */
+  protected readonly previewStep = computed(() => {
+    const t = this.tab();
+    return typeof t === 'number' ? t : 0;
+  });
   /** The open step, counted from 1 (0 when the open tab is not a step). */
   protected readonly stepIndex = computed(() => {
     const t = this.tab();
@@ -477,8 +479,6 @@ export class DraftEditorPage {
       this.steps().filter((_, k) => k !== i),
     );
   }
-
-  protected readonly friendly = friendlyMessage;
 
   protected where(p: Problem): string {
     return describePath(p.path);

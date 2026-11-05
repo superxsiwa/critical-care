@@ -1,4 +1,4 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, ElementRef, effect, inject, signal, viewChild } from '@angular/core';
 import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { SignInDialog } from './account/signin-dialog';
 import { Session } from './api/session';
@@ -9,6 +9,7 @@ import { ToastHost } from './ui/toast';
 @Component({
   selector: 'cs-root',
   imports: [RouterOutlet, RouterLink, RouterLinkActive, ConfirmHost, ToastHost, SignInDialog],
+  host: { '(document:keydown.escape)': 'escape()' },
   template: `
     <header class="border-b border-line bg-ink text-white">
       <div class="mx-auto flex max-w-7xl items-center justify-between px-4 py-2.5 sm:px-6">
@@ -20,13 +21,16 @@ import { ToastHost } from './ui/toast';
         @if (session.user(); as me) {
           <nav class="relative" aria-label="บัญชี">
             <button
+              #profileButton
               type="button"
               class="flex items-center gap-2 rounded-lg px-3 py-1.5 text-sm font-medium hover:bg-white/10 transition"
+              aria-controls="profile-menu"
               [attr.aria-expanded]="profileOpen()"
               (click)="toggleProfile()"
             >
               <div
                 class="flex h-7 w-7 items-center justify-center rounded-full bg-sky-700 text-xs font-bold text-white uppercase"
+                aria-hidden="true"
               >
                 {{ me.name ? me.name.charAt(0) : 'U' }}
               </div>
@@ -41,8 +45,8 @@ import { ToastHost } from './ui/toast';
                 aria-hidden="true"
               ></div>
               <div
+                id="profile-menu"
                 class="absolute right-0 z-40 mt-1 w-56 rounded-lg border border-line bg-white py-1.5 text-ink shadow-lg"
-                role="menu"
               >
                 <div class="border-b border-line px-3 py-2 text-xs">
                   <p class="font-semibold text-ink">{{ me.name }}</p>
@@ -51,29 +55,26 @@ import { ToastHost } from './ui/toast';
                 <button
                   type="button"
                   class="flex w-full items-center gap-2 px-3 py-2 text-left text-sm hover:bg-sky-50 transition"
-                  role="menuitem"
                   (click)="showProfileDialog.set(true); profileOpen.set(false)"
                 >
-                  <span>👤</span>
+                  <span aria-hidden="true">👤</span>
                   <span>โปรไฟล์</span>
                 </button>
                 <a
                   routerLink="/password"
                   class="flex items-center gap-2 px-3 py-2 text-sm hover:bg-sky-50 transition"
-                  role="menuitem"
                   (click)="profileOpen.set(false)"
                 >
-                  <span>🔑</span>
+                  <span aria-hidden="true">🔑</span>
                   <span>เปลี่ยนรหัสผ่าน</span>
                 </a>
                 <div class="my-1 border-t border-line"></div>
                 <button
                   type="button"
                   class="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-rose-700 hover:bg-rose-50 transition"
-                  role="menuitem"
                   (click)="signOut(); profileOpen.set(false)"
                 >
-                  <span>🚪</span>
+                  <span aria-hidden="true">🚪</span>
                   <span>ออกจากระบบ</span>
                 </button>
               </div>
@@ -95,7 +96,7 @@ import { ToastHost } from './ui/toast';
                 routerLinkActive="bg-sky-100 text-sky-900 font-semibold"
                 class="flex items-center gap-2 rounded-lg px-3 py-2 text-ink-2 hover:bg-sky-50 transition"
               >
-                <span>📊</span>
+                <span aria-hidden="true">📊</span>
                 <span>Board</span>
               </a>
               <a
@@ -103,7 +104,7 @@ import { ToastHost } from './ui/toast';
                 routerLinkActive="bg-sky-100 text-sky-900 font-semibold"
                 class="flex items-center gap-2 rounded-lg px-3 py-2 text-ink-2 hover:bg-sky-50 transition"
               >
-                <span>📋</span>
+                <span aria-hidden="true">📋</span>
                 <span>คลังเคส</span>
               </a>
               <a
@@ -111,7 +112,7 @@ import { ToastHost } from './ui/toast';
                 routerLinkActive="bg-sky-100 text-sky-900 font-semibold"
                 class="flex items-center gap-2 rounded-lg px-3 py-2 text-ink-2 hover:bg-sky-50 transition"
               >
-                <span>🧰</span>
+                <span aria-hidden="true">🧰</span>
                 <span>คลังอุปกรณ์</span>
               </a>
               <a
@@ -119,7 +120,7 @@ import { ToastHost } from './ui/toast';
                 routerLinkActive="bg-sky-100 text-sky-900 font-semibold"
                 class="flex items-center gap-2 rounded-lg px-3 py-2 text-ink-2 hover:bg-sky-50 transition"
               >
-                <span>📖</span>
+                <span aria-hidden="true">📖</span>
                 <span>คลังความรู้</span>
               </a>
 
@@ -130,23 +131,23 @@ import { ToastHost } from './ui/toast';
                 routerLinkActive="bg-sky-100 text-sky-900 font-semibold"
                 class="flex items-center gap-2 rounded-lg px-3 py-2 text-ink-2 hover:bg-sky-50 transition"
               >
-                <span>📝</span>
+                <span aria-hidden="true">📝</span>
                 <span>จัดการเคส</span>
-              </a>
-              <a
-                routerLink="/equipment-mg"
-                routerLinkActive="bg-sky-100 text-sky-900 font-semibold"
-                class="flex items-center gap-2 rounded-lg px-3 py-2 text-ink-2 hover:bg-sky-50 transition"
-              >
-                <span>📚</span>
-                <span>จัดการคลังความรู้</span>
               </a>
               <a
                 routerLink="/knowledge-mg"
                 routerLinkActive="bg-sky-100 text-sky-900 font-semibold"
                 class="flex items-center gap-2 rounded-lg px-3 py-2 text-ink-2 hover:bg-sky-50 transition"
               >
-                <span>🔧</span>
+                <span aria-hidden="true">📚</span>
+                <span>จัดการคลังความรู้</span>
+              </a>
+              <a
+                routerLink="/equipment-mg"
+                routerLinkActive="bg-sky-100 text-sky-900 font-semibold"
+                class="flex items-center gap-2 rounded-lg px-3 py-2 text-ink-2 hover:bg-sky-50 transition"
+              >
+                <span aria-hidden="true">🔧</span>
                 <span>จัดการอุปกรณ์</span>
               </a>
 
@@ -157,7 +158,7 @@ import { ToastHost } from './ui/toast';
                   routerLinkActive="bg-sky-100 text-sky-900 font-semibold"
                   class="flex items-center gap-2 rounded-lg px-3 py-2 text-ink-2 hover:bg-sky-50 transition"
                 >
-                  <span>👥</span>
+                  <span aria-hidden="true">👥</span>
                   <span>บัญชีผู้ใช้</span>
                 </a>
               }
@@ -175,13 +176,14 @@ import { ToastHost } from './ui/toast';
     </main>
 
     <!-- Modal ข้อมูลโปรไฟล์ -->
-    @if (showProfileDialog() && session.user(); as me) {
-      <div
-        class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-xs"
-        role="dialog"
-        aria-labelledby="profile-dialog-title"
-        aria-modal="true"
-      >
+    <dialog
+      #profileDialog
+      class="m-auto w-[min(24rem,calc(100vw-2rem))] rounded-xl bg-transparent p-0 text-ink backdrop:bg-black/50 backdrop:backdrop-blur-xs"
+      aria-labelledby="profile-dialog-title"
+      (close)="showProfileDialog.set(false)"
+      (click)="profileBackdrop($event)"
+    >
+      @if (session.user(); as me) {
         <div class="card w-full max-w-sm p-5 shadow-xl">
           <div class="flex items-center justify-between border-b border-line pb-3">
             <h2 id="profile-dialog-title" class="text-base font-semibold text-ink">
@@ -200,6 +202,7 @@ import { ToastHost } from './ui/toast';
             <div class="flex items-center gap-3">
               <div
                 class="flex h-12 w-12 items-center justify-center rounded-full bg-sky-800 text-lg font-bold text-white uppercase"
+                aria-hidden="true"
               >
                 {{ me.name ? me.name.charAt(0) : 'U' }}
               </div>
@@ -237,8 +240,8 @@ import { ToastHost } from './ui/toast';
             </button>
           </div>
         </div>
-      </div>
-    }
+      }
+    </dialog>
 
     <cs-signin-dialog />
     <cs-confirm-host />
@@ -251,9 +254,32 @@ export class App {
 
   protected readonly profileOpen = signal(false);
   protected readonly showProfileDialog = signal(false);
+  private readonly profileButton = viewChild<ElementRef<HTMLButtonElement>>('profileButton');
+  private readonly profileDialog =
+    viewChild.required<ElementRef<HTMLDialogElement>>('profileDialog');
+
+  constructor() {
+    // A modal dialog: focus moves into it, Escape and the backdrop close it.
+    effect(() => {
+      const d = this.profileDialog().nativeElement;
+      if (this.showProfileDialog() && !d.open) d.showModal();
+      else if (!this.showProfileDialog() && d.open) d.close();
+    });
+  }
 
   protected toggleProfile(): void {
     this.profileOpen.set(!this.profileOpen());
+  }
+
+  /** Escape closes the account menu and gives the focus back to its button. */
+  protected escape(): void {
+    if (!this.profileOpen()) return;
+    this.profileOpen.set(false);
+    this.profileButton()?.nativeElement.focus();
+  }
+
+  protected profileBackdrop(e: MouseEvent): void {
+    if (e.target === this.profileDialog().nativeElement) this.showProfileDialog.set(false);
   }
 
   protected async signOut(): Promise<void> {

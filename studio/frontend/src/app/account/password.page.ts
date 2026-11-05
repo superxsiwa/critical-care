@@ -40,7 +40,7 @@ import { failure } from '../ui/words';
             <button type="submit" class="btn btn-primary" [disabled]="f().submitting()">
               เปลี่ยนรหัสผ่าน
             </button>
-            <a routerLink="/" class="btn">กลับไปรายการเคส</a>
+            <a routerLink="/case-mg" class="btn">กลับไปรายการเคส</a>
           </div>
         </form>
       </section>

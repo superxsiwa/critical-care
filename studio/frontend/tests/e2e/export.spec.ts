@@ -7,7 +7,7 @@ test('export refuses what the app would refuse, links to the case, then download
 }) => {
   await studio.importExample('valid/minimal.json'); // bed 9, ready
   const [bad] = await studio.importExample('invalid/rule-hr-zero.json'); // bed 9 again, hr 0
-  await page.goto('/');
+  await page.goto('/case-mg');
   await page.getByRole('button', { name: 'ส่งออกแพ็กเกจ' }).click();
   const alert = page.getByRole('alert');
   await expect(alert).toContainText('ยังส่งออกไม่ได้: แอปจะไม่รับไฟล์นี้');

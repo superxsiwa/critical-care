@@ -1,8 +1,7 @@
-import { httpResource } from '@angular/common/http';
-import { Component, computed, effect, inject, signal, untracked } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
+import { draftList } from '../api/drafts';
 import { MetaStore } from '../api/meta';
-import { Session } from '../api/session';
 import { ApiError, StudioApi } from '../api/studio-api';
 import { DraftItem } from '../api/types';
 import { blankCase } from '../case/blank';
@@ -135,11 +134,18 @@ interface Refused {
                   </td>
                   <td class="whitespace-nowrap px-4 py-2.5 text-right">
                     <div class="inline-flex gap-1">
-                      <a [routerLink]="['/drafts', d.id]" class="btn btn-ghost text-xs"> แก้ไข </a>
+                      <a
+                        [routerLink]="['/drafts', d.id]"
+                        class="btn btn-ghost text-xs"
+                        [attr.aria-label]="'แก้ไข ' + label(d)"
+                      >
+                        แก้ไข
+                      </a>
                       <button
                         type="button"
                         class="btn btn-ghost text-xs"
                         [disabled]="busy()"
+                        [attr.aria-label]="'ทำสำเนา ' + label(d)"
                         (click)="duplicate(d)"
                       >
                         ทำสำเนา
@@ -148,6 +154,7 @@ interface Refused {
                         type="button"
                         class="btn btn-ghost text-xs text-rose-700"
                         [disabled]="busy()"
+                        [attr.aria-label]="'ลบ ' + label(d)"
                         (click)="remove(d)"
                       >
                         ลบ
@@ -160,6 +167,9 @@ interface Refused {
           </table>
         }
       </section>
+      <p class="text-xs text-ink-3">
+        สตูดิโอตรวจเพียงว่าแอปเล่นเคสได้ ความถูกต้องทางคลินิกเป็นหน้าที่ของผู้ตรวจทานเนื้อหา
+      </p>
     </div>
   `,
 })
@@ -170,33 +180,22 @@ export class CaseMgPage {
   private readonly confirm = inject(Confirm);
   private readonly toasts = inject(Toasts);
 
-  protected readonly drafts = httpResource<DraftItem[]>(() => '/api/drafts');
+  protected readonly drafts = draftList().resource;
   protected readonly items = computed(() => (this.drafts.hasValue() ? this.drafts.value() : []));
   protected readonly busy = signal(false);
   protected readonly refused = signal<Refused | null>(null);
 
-  constructor() {
-    const session = inject(Session);
-    let seen = untracked(session.signIns);
-    effect(() => {
-      const n = session.signIns();
-      if (n !== seen) {
-        seen = n;
-        untracked(() => this.drafts.reload());
-      }
-    });
-  }
+  /** The bed after the highest one, for a new draft or a copy. */
+  private readonly nextBed = computed(
+    () => this.items().reduce((max, d) => Math.max(max, d.bedNum ?? 0), 0) + 1,
+  );
 
   protected time(iso: string): string {
     return formatTime(iso);
   }
 
-  private nextBed(): number {
-    let max = 0;
-    for (const d of this.items()) {
-      if (d.bedNum && d.bedNum > max) max = d.bedNum;
-    }
-    return max + 1;
+  protected label(d: DraftItem): string {
+    return `เตียง ${d.bedNum ?? '-'} ${d.caseTitle}`.trim();
   }
 
   private async run(action: () => Promise<void>): Promise<void> {
@@ -214,90 +213,112 @@ export class CaseMgPage {
         const d = await this.api.create(blankCase(this.nextBed(), this.meta.stepsPerCase()));
         await this.router.navigate(['/drafts', d.id]);
       } catch (e) {
-        this.toasts.show(failure(e), true);
+        this.toasts.show('สร้างเคสไม่สำเร็จ: ' + failure(e), true);
       }
     });
   }
 
-  protected async duplicate(d: DraftItem): Promise<void> {
+  /** A copy on the next bed, opened for editing. */
+  protected duplicate(d: DraftItem): Promise<void> {
     return this.run(async () => {
       try {
+        const bed = this.nextBed();
         const full = await this.api.draft(d.id);
-        const cloned = JSON.parse(JSON.stringify(full.case));
-        cloned['bedNum'] = this.nextBed();
-        cloned['caseTitle'] = `${d.caseTitle} (สำเนา)`.trim();
-        const created = await this.api.create(cloned);
-        this.drafts.reload();
-        this.toasts.show(`คัดลอกเป็นเตียง ${cloned['bedNum']} แล้ว`);
+        const title = full.case['caseTitle'];
+        const created = await this.api.create({
+          ...full.case,
+          bedNum: bed,
+          caseTitle: `${typeof title === 'string' ? title : ''} (สำเนา)`.trim(),
+        });
+        this.toasts.show(`คัดลอกเป็นเตียง ${bed} แล้ว`);
         await this.router.navigate(['/drafts', created.id]);
       } catch (e) {
-        this.toasts.show(failure(e), true);
+        this.toasts.show('ทำสำเนาไม่สำเร็จ: ' + failure(e), true);
+        this.drafts.reload();
       }
     });
   }
 
   protected async remove(d: DraftItem): Promise<void> {
-    const title = `ลบเคส "${d.caseTitle || 'เตียง ' + (d.bedNum ?? '-')}"?`;
     const yes = await this.confirm.ask({
-      title,
+      title: `ลบเคส "${d.caseTitle || 'เตียง ' + (d.bedNum ?? '-')}"?`,
       body: 'เคสนี้จะถูกลบออกจากคลังและไม่สามารถกู้คืนได้',
       yes: 'ลบเคส',
       danger: true,
     });
     if (!yes) return;
-    return this.run(async () => {
+    await this.run(async () => {
       try {
         await this.api.remove(d.id, d.version);
-        this.drafts.reload();
         this.toasts.show('ลบเคสเรียบร้อยแล้ว');
       } catch (e) {
-        this.toasts.show(failure(e), true);
+        const stale = e instanceof ApiError && e.code === 'stale';
+        this.toasts.show(
+          stale
+            ? 'มีผู้อื่นแก้ไขเคสนี้หลังจากที่รายการโหลด: ดูรายการใหม่แล้วลองอีกครั้ง'
+            : 'ลบไม่สำเร็จ: ' + failure(e),
+          true,
+        );
       }
+      this.drafts.reload();
     });
   }
 
-  protected async importPicked(e: Event): Promise<void> {
+  protected importPicked(e: Event): Promise<void> {
     const input = e.target as HTMLInputElement;
     const file = input.files?.[0];
-    if (!file) return;
     input.value = '';
+    if (!file) return Promise.resolve();
     return this.run(async () => {
+      this.refused.set(null);
       try {
         const added = await this.api.importFile(file);
-        this.drafts.reload();
         this.toasts.show(`นำเข้าสำเร็จ ${added.length} เคส`);
       } catch (err) {
-        this.toasts.show(failure(err), true);
+        // The app's own reasons, line by line (a backup file, a newer version, a broken case).
+        if (err instanceof ApiError && err.body.problems?.length) {
+          this.refused.set({
+            title: `นำเข้า ${file.name} ไม่ได้`,
+            lines: err.body.problems.map((text) => ({ text, draft: null })),
+          });
+        } else this.toasts.show('นำเข้าไม่สำเร็จ: ' + failure(err), true);
       }
+      this.drafts.reload();
     });
   }
 
-  protected async exportPackage(): Promise<void> {
-    this.refused.set(null);
+  protected exportPackage(): Promise<void> {
     return this.run(async () => {
+      this.refused.set(null);
       try {
         const pkg = await this.api.exportPackage();
-        const blob = new Blob([pkg.text], { type: 'application/json' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download =
-          pkg.name || `critical-care-cases-${new Date().toISOString().slice(0, 10)}.json`;
-        a.click();
-        URL.revokeObjectURL(url);
+        download(pkg.name, pkg.text);
         this.toasts.show('ส่งออกไฟล์แพ็กเกจเรียบร้อยแล้ว');
-      } catch (err) {
-        if (err instanceof ApiError && err.status === 422) {
-          const detail = (err.body['detail'] as string) || 'ส่งออกไม่สำเร็จ';
-          const problems = (err.body['problems'] as string[]) || [];
+      } catch (e) {
+        if (e instanceof ApiError && e.code === 'not-ready') {
+          // "case 2 (bed 3): ..." is the 2nd draft of the list (the package keeps the list's order).
+          const list = this.items();
           this.refused.set({
-            title: detail,
-            lines: problems.map((text) => ({ text, draft: null })),
+            title: 'ยังส่งออกไม่ได้: แอปจะไม่รับไฟล์นี้',
+            lines: (e.body.problems ?? []).map((text) => {
+              const n = /^case (\d+)/.exec(text);
+              return { text, draft: n ? (list[Number(n[1]) - 1] ?? null) : null };
+            }),
           });
-        } else {
-          this.toasts.show(failure(err), true);
-        }
+        } else this.toasts.show('ส่งออกไม่สำเร็จ: ' + failure(e), true);
       }
     });
   }
+}
+
+/** Hands the browser a file to save (in the page while it is clicked; the link lives a moment longer). */
+function download(name: string, text: string): void {
+  const url = URL.createObjectURL(new Blob([text], { type: 'application/json' }));
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = name;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
 }

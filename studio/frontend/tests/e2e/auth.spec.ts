@@ -1,6 +1,13 @@
 import { type Page } from '@playwright/test';
 import { ADMIN, expect, openDraft, test } from '../support/studio';
 
+/** The menu under one's name in the header: profile, change password, sign out. */
+async function openAccountMenu(page: Page, name: string): Promise<void> {
+  const button = page.getByRole('navigation', { name: 'บัญชี' }).getByRole('button', { name });
+  await button.click();
+  await expect(button).toHaveAttribute('aria-expanded', 'true');
+}
+
 async function signInHere(page: Page, username: string, password: string): Promise<void> {
   await page.getByLabel('ชื่อผู้ใช้').fill(username);
   await page.getByLabel('รหัสผ่าน').fill(password);
@@ -27,7 +34,8 @@ test.describe('signed out', () => {
     await expect(page).toHaveURL(new RegExp(`/drafts/${id}$`));
     await expect(page.getByRole('navigation', { name: 'บัญชี' })).toContainText(ADMIN.name);
 
-    // Signing out ends it: the pages ask again.
+    // Signing out (in the account menu) ends it: the pages ask again.
+    await openAccountMenu(page, ADMIN.name);
     await page.getByRole('button', { name: 'ออกจากระบบ' }).click();
     await expect(page).toHaveURL(/\/signin$/);
     await page.goto('/');
@@ -131,6 +139,7 @@ test('a session that ends mid-edit: sign in again over the page, the edit is kep
 test("changing one's password: checked, and the other sessions end", async ({ page, studio }) => {
   const other = await studio.signIn(ADMIN.username, ADMIN.password);
   await page.goto('/');
+  await openAccountMenu(page, ADMIN.name);
   await page.getByRole('link', { name: 'เปลี่ยนรหัสผ่าน' }).click();
   await page.getByLabel('รหัสผ่านปัจจุบัน').fill('wrong-current-1');
   await page.getByLabel('รหัสผ่านใหม่', { exact: true }).fill('a-new-password-1');
@@ -146,6 +155,6 @@ test("changing one's password: checked, and the other sessions end", async ({ pa
   expect((await other.api('GET', '/api/drafts')).status).toBe(401);
   // This session goes on.
   await page.getByRole('link', { name: 'Case Studio' }).click();
-  await expect(page.getByText('ยังไม่มีเคส')).toBeVisible();
+  await expect(page.getByText('ยังไม่มีเคสในระบบ')).toBeVisible();
   await studio.signIn(ADMIN.username, 'a-new-password-1');
 });

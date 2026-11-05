@@ -4,19 +4,39 @@ import { Path, asText, pathText } from '../case/json';
 import { friendlyMessage } from '../case/where';
 import { CaseEditor, fieldId } from './case-editor';
 
-/** A field's problems, under it. The texts are the server's (English, the app's own words). */
+/**
+ * One problem's words: the Thai explanation where there is one, then the server's English text
+ * (the app's own words, word for word) in brackets; the English alone where there is none.
+ */
+@Component({
+  selector: 'cs-problem-text',
+  template: `
+    @let th = friendly(text());
+    @if (th !== text()) {
+      {{ th }}
+      <span class="text-xs font-normal"
+        >(<span lang="en">{{ text() }}</span
+        >)</span
+      >
+    } @else {
+      <span lang="en">{{ text() }}</span>
+    }
+  `,
+})
+export class ProblemText {
+  readonly text = input.required<string>();
+  protected readonly friendly = friendlyMessage;
+}
+
+/** A field's problems, under it. */
 @Component({
   selector: 'cs-errors',
+  imports: [ProblemText],
   template: `
     @if (problems().length) {
       <ul [id]="listId()" class="mt-1 space-y-0.5">
         @for (p of problems(); track $index) {
-          <li class="field-error mt-0">
-            {{ friendly(p.message) }}
-            @if (friendly(p.message) !== p.message) {
-              <span class="text-xs text-rose-500 font-normal"> ({{ p.message }})</span>
-            }
-          </li>
+          <li class="field-error mt-0"><cs-problem-text [text]="p.message" /></li>
         }
       </ul>
     }
@@ -25,7 +45,6 @@ import { CaseEditor, fieldId } from './case-editor';
 export class Errors {
   readonly problems = input.required<Problem[]>();
   readonly listId = input<string>();
-  protected readonly friendly = friendlyMessage;
 }
 
 /** The problems that belong to a place with no field of its own (a list, a step, a task). */

@@ -32,6 +32,7 @@ type ViewMode = 'card' | 'list';
                   ? 'bg-sky-800 text-white shadow-xs'
                   : 'text-ink-2 hover:bg-sky-50'
               "
+              [attr.aria-pressed]="viewMode() === 'card'"
               (click)="viewMode.set('card')"
             >
               🎴 มุมมองการ์ด
@@ -44,6 +45,7 @@ type ViewMode = 'card' | 'list';
                   ? 'bg-sky-800 text-white shadow-xs'
                   : 'text-ink-2 hover:bg-sky-50'
               "
+              [attr.aria-pressed]="viewMode() === 'list'"
               (click)="viewMode.set('list')"
             >
               📋 มุมมองรายการ
@@ -76,6 +78,7 @@ type ViewMode = 'card' | 'list';
                   ? 'bg-sky-800 text-white'
                   : 'bg-white text-ink-2 hover:bg-sky-100 border border-line'
               "
+              [attr.aria-pressed]="selectedCategory() === c"
               (click)="selectedCategory.set(c)"
             >
               {{ c }}

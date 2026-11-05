@@ -3,7 +3,10 @@ import { adminOnly, signedIn, signedOut } from './account/guards';
 import { SignInPage } from './account/signin.page';
 import type { DraftEditorPage } from './editor/draft-editor.page';
 
-/** The routes: Board, Case Library, Equipment, Knowledge, Case MG, Knowledge MG, Equipment MG. */
+/**
+ * The routes: Board, Case Library, Equipment, Knowledge, Case MG, Knowledge MG, Equipment MG.
+ * Sign-in comes with the first load; every other page loads when first opened.
+ */
 export const routes: Routes = [
   {
     path: 'signin',
@@ -47,12 +50,12 @@ export const routes: Routes = [
         title: 'จัดการเคส · Case Studio',
       },
       {
-        path: 'equipment-mg',
+        path: 'knowledge-mg',
         loadComponent: () => import('./knowledge/knowledge-mg.page').then((m) => m.KnowledgeMgPage),
         title: 'จัดการคลังความรู้ · Case Studio',
       },
       {
-        path: 'knowledge-mg',
+        path: 'equipment-mg',
         loadComponent: () => import('./equipment/equipment-mg.page').then((m) => m.EquipmentMgPage),
         title: 'จัดการอุปกรณ์ · Case Studio',
       },
