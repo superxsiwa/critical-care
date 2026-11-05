@@ -1,8 +1,7 @@
-import { httpResource } from '@angular/common/http';
-import { Component, computed, inject } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { draftList } from '../api/drafts';
 import { MetaStore } from '../api/meta';
-import { DraftItem } from '../api/types';
 import { formatTime } from '../ui/words';
 
 @Component({
@@ -84,7 +83,15 @@ import { formatTime } from '../ui/words';
               </div>
             </div>
           } @empty {
-            <p class="col-span-full py-4 text-center text-xs text-ink-3">ยังไม่มีข้อมูลเคสในระบบ</p>
+            @if (drafts.error()) {
+              <p class="col-span-full py-4 text-center text-sm text-rose-700">
+                โหลดรายการเคสไม่สำเร็จ
+              </p>
+            } @else if (drafts.hasValue()) {
+              <p class="col-span-full py-4 text-center text-xs text-ink-3">
+                ยังไม่มีข้อมูลเคสในระบบ
+              </p>
+            }
           }
         </div>
       </section>
@@ -96,6 +103,8 @@ import { formatTime } from '../ui/words';
         </div>
         @if (drafts.isLoading() && !drafts.hasValue()) {
           <p class="p-6 text-ink-2" role="status">กำลังโหลด…</p>
+        } @else if (drafts.error()) {
+          <p class="p-6 text-rose-700">โหลดรายการเคสไม่สำเร็จ</p>
         } @else {
           <table class="w-full text-left text-sm">
             <thead>
@@ -152,13 +161,11 @@ import { formatTime } from '../ui/words';
 })
 export class BoardPage {
   protected readonly meta = inject(MetaStore);
-  protected readonly drafts = httpResource<DraftItem[]>(() => '/api/drafts');
-
-  protected readonly items = computed(() => (this.drafts.hasValue() ? this.drafts.value() : []));
-  protected readonly readyCount = computed(() => this.items().filter((d) => !d.problems).length);
-  protected readonly problemCount = computed(
-    () => this.items().filter((d) => (d.problems ?? 0) > 0).length,
-  );
+  private readonly list = draftList();
+  protected readonly drafts = this.list.resource;
+  protected readonly items = this.list.items;
+  protected readonly readyCount = this.list.ready;
+  protected readonly problemCount = this.list.withProblems;
 
   protected time(iso: string): string {
     return formatTime(iso);

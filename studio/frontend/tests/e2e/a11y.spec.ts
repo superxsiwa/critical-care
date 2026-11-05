@@ -1,24 +1,80 @@
 import AxeBuilder from '@axe-core/playwright';
 import { type Page } from '@playwright/test';
-import { expect, openDraft, test } from '../support/studio';
+import { ADMIN, expect, openDraft, test } from '../support/studio';
 
 /** WCAG 2.1 A and AA, as axe checks them. */
 async function violations(page: Page): Promise<string[]> {
+  // Colours are measured once a transition (a toggle turning dark) has ended or was cancelled.
+  await page.evaluate(() =>
+    Promise.all(document.getAnimations().map((a) => a.finished.catch(() => undefined))),
+  );
   const r = await new AxeBuilder({ page })
     .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'])
     .analyze();
   return r.violations.map((v) => `${v.id}: ${v.nodes.map((n) => n.target.join(' ')).join(', ')}`);
 }
 
-test('the list passes axe (empty, then with drafts)', async ({ page, studio }) => {
-  await page.goto('/');
-  await expect(page.getByText('ยังไม่มีเคส')).toBeVisible();
-  expect(await violations(page)).toEqual([]);
+/** Every page of the menu, by its path and its heading. */
+const PAGES: [string, RegExp][] = [
+  ['/', /^Board/],
+  ['/case', /^คลังเคสจำลอง/],
+  ['/equipment', /^คลังอุปกรณ์และยา/],
+  ['/knowledge', /^คลังความรู้/],
+  ['/case-mg', /^จัดการเคส/],
+  ['/knowledge-mg', /^จัดการคลังความรู้/],
+  ['/equipment-mg', /^จัดการอุปกรณ์และยา/],
+];
+
+test('every page of the menu passes axe, empty and with drafts', async ({ page, studio }) => {
+  for (const [path, heading] of PAGES) {
+    await page.goto(path);
+    await expect(page.getByRole('heading', { level: 1 })).toHaveText(heading);
+    expect(await violations(page), `${path} (empty)`).toEqual([]);
+  }
   await studio.importExample('valid/package-two-beds.json');
   await studio.importExample('invalid/rule-hr-zero.json');
-  await page.reload();
-  await expect(page.getByRole('row')).toHaveCount(4);
-  expect(await violations(page)).toEqual([]);
+  for (const [path, heading] of PAGES) {
+    await page.goto(path);
+    await expect(page.getByRole('heading', { level: 1 })).toHaveText(heading);
+    if (['/', '/case', '/case-mg'].includes(path))
+      await expect(page.getByText('ถอดสาย Femoral Sheath').first()).toBeVisible();
+    expect(await violations(page), path).toEqual([]);
+  }
+  // The other views of the pages that have them.
+  for (const [path, view] of [
+    ['/case', 'มุมมองการ์ด'],
+    ['/equipment', 'มุมมองรายการ'],
+    ['/knowledge', 'มุมมองรายการ'],
+    ['/knowledge', 'มุมมองการ์ด'],
+  ]) {
+    await page.goto(path);
+    const button = page.getByRole('button', { name: view });
+    await button.click();
+    await expect(button).toHaveAttribute('aria-pressed', 'true');
+    expect(await violations(page), `${path} ${view}`).toEqual([]);
+  }
+});
+
+test('the account menu and the profile pass axe; Escape closes them', async ({ page }) => {
+  await page.goto('/');
+  const account = page
+    .getByRole('navigation', { name: 'บัญชี' })
+    .getByRole('button', { name: ADMIN.name });
+  await account.click();
+  await expect(account).toHaveAttribute('aria-expanded', 'true');
+  expect(await violations(page), 'menu').toEqual([]);
+  await page.keyboard.press('Escape');
+  await expect(account).toHaveAttribute('aria-expanded', 'false');
+  await expect(account).toBeFocused();
+
+  await account.click();
+  await page.getByRole('button', { name: 'โปรไฟล์' }).click();
+  const dialog = page.getByRole('dialog', { name: 'ข้อมูลโปรไฟล์' });
+  await expect(dialog).toBeVisible();
+  await expect(dialog.getByRole('button', { name: 'ปิด' }).first()).toBeFocused();
+  expect(await violations(page), 'profile').toEqual([]);
+  await page.keyboard.press('Escape');
+  await expect(dialog).toBeHidden();
 });
 
 test('every tab of the editor passes axe, with problems shown', async ({ page, studio }) => {

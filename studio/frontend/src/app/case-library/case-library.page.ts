@@ -1,7 +1,6 @@
-import { httpResource } from '@angular/common/http';
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, computed, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { DraftItem } from '../api/types';
+import { draftList } from '../api/drafts';
 import { formatTime } from '../ui/words';
 
 type ViewMode = 'list' | 'card';
@@ -35,6 +34,7 @@ type ViewMode = 'list' | 'card';
                   ? 'bg-sky-800 text-white shadow-xs'
                   : 'text-ink-2 hover:bg-sky-50'
               "
+              [attr.aria-pressed]="viewMode() === 'list'"
               (click)="viewMode.set('list')"
             >
               📋 มุมมองรายการ
@@ -47,6 +47,7 @@ type ViewMode = 'list' | 'card';
                   ? 'bg-sky-800 text-white shadow-xs'
                   : 'text-ink-2 hover:bg-sky-50'
               "
+              [attr.aria-pressed]="viewMode() === 'card'"
               (click)="viewMode.set('card')"
             >
               🎴 มุมมองการ์ด
@@ -78,6 +79,7 @@ type ViewMode = 'list' | 'card';
                 ? 'bg-sky-800 text-white'
                 : 'border border-line bg-white text-ink-2 hover:bg-sky-50'
             "
+            [attr.aria-pressed]="filter() === 'all'"
             (click)="filter.set('all')"
           >
             ทั้งหมด ({{ items().length }})
@@ -90,6 +92,7 @@ type ViewMode = 'list' | 'card';
                 ? 'bg-emerald-700 text-white'
                 : 'border border-line bg-white text-ink-2 hover:bg-emerald-50'
             "
+            [attr.aria-pressed]="filter() === 'ready'"
             (click)="filter.set('ready')"
           >
             พร้อมส่งออก ({{ readyCount() }})
@@ -102,6 +105,7 @@ type ViewMode = 'list' | 'card';
                 ? 'bg-rose-700 text-white'
                 : 'border border-line bg-white text-ink-2 hover:bg-rose-50'
             "
+            [attr.aria-pressed]="filter() === 'problem'"
             (click)="filter.set('problem')"
           >
             ต้องตรวจสอบ ({{ problemCount() }})
@@ -112,6 +116,8 @@ type ViewMode = 'list' | 'card';
       <!-- Main Content: List View or Card View -->
       @if (drafts.isLoading() && !drafts.hasValue()) {
         <p class="card p-6 text-ink-2" role="status">กำลังโหลดเคส…</p>
+      } @else if (drafts.error()) {
+        <p class="card p-6 text-rose-700">โหลดรายการเคสไม่สำเร็จ</p>
       } @else if (viewMode() === 'list') {
         <!-- มุมมองรายการ (List View / Table) -->
         <section class="card overflow-x-auto" aria-label="รายการเคส">
@@ -212,16 +218,15 @@ type ViewMode = 'list' | 'card';
   `,
 })
 export class CaseLibraryPage {
-  protected readonly drafts = httpResource<DraftItem[]>(() => '/api/drafts');
+  private readonly list = draftList();
+  protected readonly drafts = this.list.resource;
   protected readonly viewMode = signal<ViewMode>('list');
   protected readonly query = signal('');
   protected readonly filter = signal<'all' | 'ready' | 'problem'>('all');
 
-  protected readonly items = computed(() => (this.drafts.hasValue() ? this.drafts.value() : []));
-  protected readonly readyCount = computed(() => this.items().filter((d) => !d.problems).length);
-  protected readonly problemCount = computed(
-    () => this.items().filter((d) => (d.problems ?? 0) > 0).length,
-  );
+  protected readonly items = this.list.items;
+  protected readonly readyCount = this.list.ready;
+  protected readonly problemCount = this.list.withProblems;
 
   protected readonly filtered = computed(() => {
     const q = this.query().trim().toLowerCase();

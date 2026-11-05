@@ -30,6 +30,7 @@ type KnowledgeViewMode = 'folder' | 'list' | 'card';
                   ? 'bg-sky-800 text-white shadow-xs'
                   : 'text-ink-2 hover:bg-sky-50'
               "
+              [attr.aria-pressed]="viewMode() === 'folder'"
               (click)="viewMode.set('folder')"
             >
               📁 จัดกลุ่มโฟลเดอร์
@@ -42,6 +43,7 @@ type KnowledgeViewMode = 'folder' | 'list' | 'card';
                   ? 'bg-sky-800 text-white shadow-xs'
                   : 'text-ink-2 hover:bg-sky-50'
               "
+              [attr.aria-pressed]="viewMode() === 'list'"
               (click)="viewMode.set('list')"
             >
               📋 มุมมองรายการ
@@ -54,6 +56,7 @@ type KnowledgeViewMode = 'folder' | 'list' | 'card';
                   ? 'bg-sky-800 text-white shadow-xs'
                   : 'text-ink-2 hover:bg-sky-50'
               "
+              [attr.aria-pressed]="viewMode() === 'card'"
               (click)="viewMode.set('card')"
             >
               🎴 มุมมองการ์ด
@@ -86,16 +89,19 @@ type KnowledgeViewMode = 'folder' | 'list' | 'card';
               <button
                 type="button"
                 class="flex w-full items-center justify-between p-3.5 text-left font-semibold text-sm hover:bg-sky-50/60 transition"
+                [attr.aria-expanded]="isExpanded(cat)"
                 (click)="toggleFolder(cat)"
               >
-                <div class="flex items-center gap-2">
-                  <span class="text-base">{{ isExpanded(cat) ? '📂' : '📁' }}</span>
+                <span class="flex items-center gap-2">
+                  <span class="text-base" aria-hidden="true">{{
+                    isExpanded(cat) ? '📂' : '📁'
+                  }}</span>
                   <span class="text-sky-950 font-medium">{{ cat }}</span>
                   <span class="badge badge-plain text-[11px]">
                     {{ articlesInCat(cat).length }} รายการ
                   </span>
-                </div>
-                <span class="text-xs text-ink-3">
+                </span>
+                <span class="text-xs text-ink-3" aria-hidden="true">
                   {{ isExpanded(cat) ? 'ย่อ ▲' : 'ขยาย ▼' }}
                 </span>
               </button>
@@ -103,19 +109,26 @@ type KnowledgeViewMode = 'folder' | 'list' | 'card';
               @if (isExpanded(cat)) {
                 <div class="border-t border-line bg-sky-50/20 p-2 divide-y divide-sky-100">
                   @for (art of articlesInCat(cat); track art.id) {
-                    <div
-                      class="flex items-center justify-between p-2.5 hover:bg-white rounded-md transition cursor-pointer"
+                    <button
+                      type="button"
+                      class="flex w-full items-center justify-between p-2.5 text-left hover:bg-white rounded-md transition cursor-pointer"
                       (click)="activeArticle.set(art)"
                     >
-                      <div class="flex items-center gap-2.5 min-w-0">
-                        <span class="text-sky-700 text-sm">📄</span>
-                        <div class="min-w-0">
-                          <p class="text-sm font-medium text-ink truncate">{{ art.title }}</p>
-                          <p class="text-xs text-ink-3 truncate">{{ art.summary }}</p>
-                        </div>
-                      </div>
-                      <span class="text-xs text-sky-800 font-medium ml-2 shrink-0">เปิดอ่าน →</span>
-                    </div>
+                      <span class="flex items-center gap-2.5 min-w-0">
+                        <span class="text-sky-700 text-sm" aria-hidden="true">📄</span>
+                        <span class="block min-w-0">
+                          <span class="block text-sm font-medium text-ink truncate">{{
+                            art.title
+                          }}</span>
+                          <span class="block text-xs text-ink-3 truncate">{{ art.summary }}</span>
+                        </span>
+                      </span>
+                      <span
+                        class="text-xs text-sky-800 font-medium ml-2 shrink-0"
+                        aria-hidden="true"
+                        >เปิดอ่าน →</span
+                      >
+                    </button>
                   }
                 </div>
               }

@@ -1,4 +1,4 @@
-import { Component, computed, inject } from '@angular/core';
+import { Component, computed, inject, input } from '@angular/core';
 import { asText, isObject, listAt } from '../case/json';
 import { CaseEditor } from './case-editor';
 
@@ -71,6 +71,8 @@ import { CaseEditor } from './case-editor';
 })
 export class BedsidePreview {
   private readonly editor = inject(CaseEditor);
+  /** The step shown, counted from 0: the open step's tab, else the first step. */
+  readonly step = input(0);
 
   protected readonly bedNum = computed(() => this.editor.value(['bedNum']));
   protected readonly patientName = computed(() => asText(this.editor.value(['patientName'])));
@@ -79,11 +81,9 @@ export class BedsidePreview {
   protected readonly doctorName = computed(() => asText(this.editor.value(['doctorName'])));
   protected readonly doctorAvatar = computed(() => asText(this.editor.value(['doctorAvatar'])));
 
-  // Current step values (from current tab)
   protected readonly currentStep = computed(() => {
-    const doc = this.editor.doc();
-    const steps = listAt(doc, ['stageData']);
-    return (steps[0] as Record<string, unknown>) ?? null;
+    const steps = listAt(this.editor.doc(), ['stageData']);
+    return (steps[this.step()] as Record<string, unknown>) ?? null;
   });
 
   protected readonly hr = computed(() => {

@@ -1,8 +1,8 @@
 import { example, expect, openDraft, problemLines, test } from '../support/studio';
 
 test('an empty studio says how to start', async ({ page }) => {
-  await page.goto('/');
-  await expect(page.getByText('ยังไม่มีเคส')).toBeVisible();
+  await page.goto('/case-mg');
+  await expect(page.getByText('ยังไม่มีเคสในระบบ')).toBeVisible();
   await expect(page.getByRole('button', { name: 'ส่งออกแพ็กเกจ' })).toBeDisabled();
 });
 
@@ -10,7 +10,7 @@ test('a new draft is blank, lists everything left to write, and is saved with it
   page,
   studio,
 }) => {
-  await page.goto('/');
+  await page.goto('/case-mg');
   await page.getByRole('button', { name: '+ เคสใหม่' }).click();
   await expect(page).toHaveURL(/\/drafts\/\d+$/);
   await expect(page.getByRole('heading', { level: 1 })).toContainText('เตียง 1');
@@ -32,30 +32,36 @@ test('a new draft is blank, lists everything left to write, and is saved with it
   const list = await studio.api<{ caseTitle: string; version: number }[]>('GET', '/api/drafts');
   expect(list.body).toEqual([expect.objectContaining({ caseTitle: 'เคสทดสอบ', version: 2 })]);
   await page.getByRole('link', { name: '← รายการเคส' }).click();
+  await expect(page).toHaveURL(/\/case-mg$/);
   const row = page.getByRole('row', { name: /เคสทดสอบ/ });
   await expect(row).toContainText('ฉบับที่ 2');
   await expect(row).toContainText(/ต้องแก้ \d+ ข้อ/);
 });
 
 test('import a file through the browser, copy a draft, delete one', async ({ page, studio }) => {
-  await page.goto('/');
+  await page.goto('/case-mg');
   const chooser = page.waitForEvent('filechooser');
   await page.getByRole('button', { name: 'นำเข้าไฟล์ JSON' }).click();
   await (await chooser).setFiles(example('valid/package-two-beds.json'));
-  await expect(page.getByText('นำเข้า 2 เคสจาก package-two-beds.json แล้ว')).toBeVisible();
+  await expect(page.getByText('นำเข้าสำเร็จ 2 เคส')).toBeVisible();
   const rows = page.getByRole('row');
   await expect(rows).toHaveCount(3); // the header and 2 beds, in bed order
   await expect(rows.nth(1)).toContainText('ถอดสาย Femoral Sheath');
   await expect(rows.nth(1)).toContainText('พร้อมส่งออก');
 
+  // A copy goes on the next bed and opens for editing.
   await page.getByRole('button', { name: /^ทำสำเนา เตียง 1/ }).click();
-  await expect(page.getByText('ทำสำเนาเป็นเตียง 3 แล้ว')).toBeVisible();
+  await expect(page.getByText('คัดลอกเป็นเตียง 3 แล้ว')).toBeVisible();
+  await expect(page).toHaveURL(/\/drafts\/\d+$/);
+  await expect(page.getByRole('heading', { level: 1 })).toContainText('เตียง 3');
+  await expect(page.getByLabel('ชื่อเคสหัตถการ')).toHaveValue(/\(สำเนา\)$/);
+  await page.getByRole('link', { name: '← รายการเคส' }).click();
   await expect(rows).toHaveCount(4);
   await expect(rows.nth(3)).toContainText('3');
 
   await page.getByRole('button', { name: /^ลบ เตียง 3/ }).click();
   const dialog = page.getByRole('dialog');
-  await expect(dialog).toContainText('ลบแล้วกู้คืนไม่ได้');
+  await expect(dialog).toContainText('ไม่สามารถกู้คืนได้');
   await dialog.getByRole('button', { name: 'ลบเคส' }).click();
   await expect(rows).toHaveCount(3);
   const list = await studio.api<unknown[]>('GET', '/api/drafts');
@@ -63,7 +69,7 @@ test('import a file through the browser, copy a draft, delete one', async ({ pag
 });
 
 test('a file the app would refuse is not imported, and says why', async ({ page, studio }) => {
-  await page.goto('/');
+  await page.goto('/case-mg');
   for (const [file, line] of [
     ['invalid/backup-file.json', 'backup'],
     ['invalid/newer-version.json', 'update the app first'],
@@ -131,7 +137,7 @@ test('leaving with unsaved changes asks first', async ({ page, studio }) => {
 
   await page.getByRole('link', { name: '← รายการเคส' }).click();
   await dialog.getByRole('button', { name: 'ออกโดยไม่บันทึก' }).click();
-  await expect(page).toHaveURL(/\/$/);
+  await expect(page).toHaveURL(/\/case-mg$/);
   const list = await studio.api<{ caseTitle: string }[]>('GET', '/api/drafts');
   expect(list.body[0].caseTitle).not.toBe('ยังไม่บันทึก');
 });

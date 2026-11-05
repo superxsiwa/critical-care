@@ -60,8 +60,8 @@ const USERNAME = /^[A-Za-z0-9._-]{2,40}$/;
           </div>
         }
         <div class="flex flex-col justify-between gap-2 md:pt-1">
-          <div>
-            <span class="label">ประเภทผู้ใช้</span>
+          <fieldset>
+            <legend class="label">ประเภทผู้ใช้</legend>
             <div class="mt-1.5 flex items-center gap-3">
               <label class="inline-flex items-center gap-1.5 text-sm cursor-pointer">
                 <input
@@ -84,7 +84,7 @@ const USERNAME = /^[A-Za-z0-9._-]{2,40}$/;
                 <span class="font-semibold text-sky-800">Admin</span>
               </label>
             </div>
-          </div>
+          </fieldset>
           <button type="submit" class="btn btn-primary" [disabled]="f().submitting()">
             เพิ่มบัญชี
           </button>
