@@ -29,4 +29,6 @@ type User struct {
 	Active       bool
 	CreatedAt    string
 	UpdatedAt    string
+	Email        sql.NullString
+	GoogleSub    sql.NullString
 }

@@ -23,7 +23,7 @@ import { SignInForm } from './signin-form';
           <p class="mt-1 mb-4 text-sm text-ink-2">
             หมดเวลาการใช้งาน งานที่ยังไม่บันทึกยังอยู่ในหน้านี้ เข้าสู่ระบบแล้วทำรายการเดิมอีกครั้ง
           </p>
-          <cs-signin-form (signedIn)="done()" />
+          <cs-signin-form [popup]="true" (signedIn)="done()" />
           <button type="button" class="btn btn-ghost mt-2 w-full" (click)="close()">ปิด</button>
         </div>
       }

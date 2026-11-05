@@ -100,6 +100,7 @@ export class StudioApi {
   createUser(a: {
     username: string;
     name: string;
+    email: string;
     password: string;
     admin: boolean;
   }): Promise<Account> {
@@ -109,6 +110,16 @@ export class StudioApi {
   /** An admin changes an account's name, admin rights, or switches it on or off. */
   updateUser(id: number, a: { name: string; admin: boolean; active: boolean }): Promise<Account> {
     return call(firstValueFrom(this.http.put<Account>(`/api/users/${id}`, a)));
+  }
+
+  /** An admin sets an account's Google email ('' removes it); a new one unties Google. */
+  setEmail(id: number, email: string): Promise<Account> {
+    return call(firstValueFrom(this.http.put<Account>(`/api/users/${id}/email`, { email })));
+  }
+
+  /** An admin unties an account's Google account; the next Google sign-in ties it again by email. */
+  unlinkGoogle(id: number): Promise<Account> {
+    return call(firstValueFrom(this.http.delete<Account>(`/api/users/${id}/google`)));
   }
 
   /** An admin sets a new password for an account; its sessions end. */

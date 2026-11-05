@@ -3,6 +3,12 @@ import { mkdtempSync, readFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { test as base, expect, type Page } from '@playwright/test';
+import {
+  type FakeGoogle,
+  GOOGLE_CLIENT_ID,
+  GOOGLE_CLIENT_SECRET,
+  startFakeGoogle,
+} from './fake-google';
 
 /** The repository's contract folder: the example files both sides test. */
 export const CONTRACT = resolve(__dirname, '../../../../contract');
@@ -10,7 +16,12 @@ export const example = (name: string) => join(CONTRACT, 'examples', name);
 export const exampleJson = (name: string) => JSON.parse(readFileSync(example(name), 'utf8'));
 
 /** The admin every test studio starts with (made by `casestudio user add`, as on a real box). */
-export const ADMIN = { username: 'admin', name: 'ผู้ดูแลทดสอบ', password: 'admin-password-1' };
+export const ADMIN = {
+  username: 'admin',
+  name: 'ผู้ดูแลทดสอบ',
+  password: 'admin-password-1',
+  email: 'admin@example.com',
+};
 
 export type Api = <T = unknown>(
   method: string,
@@ -37,6 +48,8 @@ export interface Studio {
   addUser(username: string, name: string, password: string, admin?: boolean): Promise<void>;
   /** Imports a contract example as drafts; the new drafts' ids. */
   importExample(name: string): Promise<number[]>;
+  /** The fake Google the studio signs in with (every test studio has Google sign-in on). */
+  google: FakeGoogle;
 }
 
 /** Signs in as the page does: the session probe gives the CSRF cookie, then the sign-in. */
@@ -81,19 +94,28 @@ async function start(): Promise<Studio & { stop(): Promise<void> }> {
   const bin = process.env['CASESTUDIO_BIN'];
   if (!bin) throw new Error('no CASESTUDIO_BIN: the global setup builds it (run the e2e project)');
   const dir = mkdtempSync(join(tmpdir(), 'casestudio-test-'));
+  const google = await startFakeGoogle();
   const env = {
     ...process.env,
     CASESTUDIO_ADDR: '127.0.0.1:0',
     CASESTUDIO_DATA: join(dir, 'data'),
+    CASESTUDIO_GOOGLE_CLIENT_ID: GOOGLE_CLIENT_ID,
+    CASESTUDIO_GOOGLE_CLIENT_SECRET: GOOGLE_CLIENT_SECRET,
+    CASESTUDIO_GOOGLE_ISSUER: google.url,
   };
   try {
-    execFileSync(bin, ['user', 'add', ADMIN.username, '--name', ADMIN.name, '--admin'], {
-      env,
-      input: ADMIN.password + '\n',
-      stdio: ['pipe', 'ignore', 'pipe'],
-    });
+    execFileSync(
+      bin,
+      ['user', 'add', ADMIN.username, '--name', ADMIN.name, '--email', ADMIN.email, '--admin'],
+      {
+        env,
+        input: ADMIN.password + '\n',
+        stdio: ['pipe', 'ignore', 'pipe'],
+      },
+    );
   } catch (err) {
     rmSync(dir, { recursive: true, force: true });
+    await google.close();
     throw err;
   }
   const proc: ChildProcess = spawn(bin, ['serve'], { env, stdio: ['ignore', 'pipe', 'pipe'] });
@@ -106,6 +128,7 @@ async function start(): Promise<Studio & { stop(): Promise<void> }> {
       clearTimeout(hard);
     }
     rmSync(dir, { recursive: true, force: true });
+    await google.close();
   };
   // The server says where it listens: msg="casestudio listening" addr=127.0.0.1:41234. A server
   // that does not say so in time is stopped here: nothing a test started outlives it.
@@ -135,6 +158,7 @@ async function start(): Promise<Studio & { stop(): Promise<void> }> {
     url,
     api,
     cookies: admin.cookies,
+    google,
     signIn: (username, password) => signIn(url, username, password),
     async addUser(username, name, password, isAdmin = false) {
       const r = await api('POST', '/api/users', { username, name, password, admin: isAdmin });

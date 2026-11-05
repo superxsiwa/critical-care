@@ -19,6 +19,7 @@ type Deps struct {
 	Log    *slog.Logger
 	Now    func() time.Time
 	Secret []byte
+	Google auth.GoogleConfig // Google sign-in, on when it has a client id
 }
 
 // New builds the studio's HTTP handler.
@@ -27,7 +28,7 @@ func New(d Deps) http.Handler {
 		d.Now = time.Now
 	}
 	mux := http.NewServeMux()
-	signIn := auth.New(d.DB, d.Log, d.Secret, d.Now)
+	signIn := auth.New(d.DB, d.Log, d.Secret, d.Now, d.Google)
 	signIn.Mount(mux)
 	(&drafts.Service{DB: d.DB, Log: d.Log, Now: d.Now}).Mount(mux)
 	mux.HandleFunc("/api/", func(w http.ResponseWriter, r *http.Request) {

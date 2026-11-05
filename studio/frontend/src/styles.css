@@ -55,6 +55,10 @@ body {
   .btn-ghost {
     @apply border-transparent bg-transparent hover:bg-sky-100;
   }
+  /* Google's neutral sign-in button: white, a grey border, the mark, dark text. */
+  .btn-google {
+    @apply gap-3 border-[#747775] bg-white py-2.5 text-[#1f1f1f] hover:bg-[#f8fafd] active:bg-[#eef2f8];
+  }
   .btn-icon {
     @apply h-8 w-8 px-0;
   }

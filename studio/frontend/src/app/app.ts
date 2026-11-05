@@ -216,6 +216,18 @@ import { ToastHost } from './ui/toast';
             <div class="rounded-lg bg-sky-50/60 p-3 space-y-1.5 text-xs text-ink-2">
               <p><strong>ชื่อผู้ใช้ (Username):</strong> {{ me.username }}</p>
               <p>
+                <strong>เข้าสู่ระบบด้วย:</strong>
+                @if (me.email) {
+                  Google {{ me.email }} {{ me.google ? '(ผูกแล้ว)' : '(ยังไม่เคยเข้า)' }}
+                }
+                @if (me.email && me.hasPassword) {
+                  ·
+                }
+                @if (me.hasPassword) {
+                  รหัสผ่าน
+                }
+              </p>
+              <p>
                 <strong>ประเภทผู้ใช้:</strong>
                 {{ me.admin ? '1. Admin (ผู้ดูแลระบบ)' : '2. พยาบาล (Nurse)' }}
               </p>

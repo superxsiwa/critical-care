@@ -74,7 +74,7 @@ test.describe('signed out', () => {
     // The same username again (in other letters) is refused on its field.
     await form.getByLabel('ชื่อผู้ใช้ (ใช้เข้าสู่ระบบ)').fill('ANNA');
     await form.getByLabel('ชื่อ-นามสกุล').fill('อีกคน');
-    await form.getByLabel('รหัสผ่านเริ่มต้น').fill('another-password-9');
+    await form.getByLabel('รหัสผ่านสำรอง').fill('another-password-9');
     await form.getByRole('button', { name: 'เพิ่มบัญชี' }).click();
     await expect(form.getByText('ชื่อผู้ใช้นี้มีคนใช้แล้ว')).toBeVisible();
 

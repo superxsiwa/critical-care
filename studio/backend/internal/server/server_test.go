@@ -62,7 +62,7 @@ func studioDB(t *testing.T) (*httptest.Server, *sql.DB) {
 
 func addAccount(t *testing.T, d *sql.DB, username, name, password string, admin bool) {
 	t.Helper()
-	if _, err := auth.NewAccount(context.Background(), store.New(d), username, name, password, admin, "2026-11-03T12:00:00Z"); err != nil {
+	if _, err := auth.NewAccount(context.Background(), store.New(d), auth.AccountIn{Username: username, Name: name, Password: password, Admin: admin}, "2026-11-03T12:00:00Z"); err != nil {
 		t.Fatal(err)
 	}
 }
