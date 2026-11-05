@@ -8,6 +8,7 @@ const FORBIDDEN = [0xfeff, 0x200d, 0xfe0f, 0x2013, 0x2014].map((n) => String.fro
 
 const ours = () => [
   ...sources('frontend/src', ['.ts', '.css', '.html']),
+  ...sources('frontend/public', ['.html', '.css']),
   ...sources('frontend/tests', ['.ts']),
   ...sources('dev', ['.sh']),
   ...sources('.', ['README.md']).filter(([p]) => !p.includes('/')),
