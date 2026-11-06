@@ -89,6 +89,17 @@ test('the dialogs of the equipment and knowledge pages pass axe', async ({ page 
   expect(await violations(page), 'knowledge: details').toEqual([]);
 });
 
+test('publishing to the app passes axe: the question and a refusal', async ({ page, studio }) => {
+  await studio.importExample('invalid/rule-hr-zero.json');
+  await page.goto('/case-mg');
+  await page.getByRole('button', { name: 'ประกาศใช้ในแอป' }).click();
+  await expect(page.getByRole('dialog')).toBeVisible();
+  expect(await violations(page), 'publish: the question').toEqual([]);
+  await page.getByRole('dialog').getByRole('button', { name: 'ประกาศใช้' }).click();
+  await expect(page.getByRole('alert')).toContainText('ยังประกาศใช้ไม่ได้');
+  expect(await violations(page), 'publish: refused').toEqual([]);
+});
+
 test('the account menu and the profile pass axe; Escape closes them', async ({ page }) => {
   await page.goto('/');
   const account = page

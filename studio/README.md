@@ -1,8 +1,9 @@
 # Case Studio
 
 Where instructors write cases for the app (#20). Cases are kept as drafts, checked with the app's own
-rules, and exported together as one case package (`../contract/`) that the app imports. The app never
-contacts the studio: cases reach phones only as the exported file.
+rules, and exported together as one case package (`../contract/`) that the app imports. Since step 10
+(2026-11-06) an instructor can also **publish** the drafts: the app follows the newest published revision
+through the studio's public, read-only feed, and plays it offline. A file export still works as before.
 
 Stack (the suite's): Go with SQLite (`modernc.org/sqlite`, no cgo), goose migrations, sqlc; an Angular 22
 web app (standalone components, signals, zoneless, Tailwind 4) embedded in the one binary.
@@ -92,7 +93,7 @@ right. Every page but sign-in loads when first opened.
 | คลังเคส (`/case`) | Every draft to read: find by title, bed or who saved it, filter ready / with problems, as a list or cards |
 | คลังอุปกรณ์ (`/equipment`) | The app's equipment pictures with their names (from the server), by category |
 | คลังความรู้ (`/knowledge`) | Articles for authors (from the server), by folder, list or cards |
-| จัดการเคส (`/case-mg`) | Every draft: bed, title, ready or how many problems, last saved and version. New case, import a file (a package, the app's export or his React app's), export the package, copy (opens the copy), delete |
+| จัดการเคส (`/case-mg`) | Every draft: bed, title, ready or how many problems, last saved and version. New case, import a file (a package, the app's export or his React app's), export the package, **ประกาศใช้ในแอป (publish to the app)** with what the app follows now (revision, cases, when, by whom), copy (opens the copy), delete |
 | จัดการคลังความรู้ (`/knowledge-mg`), จัดการอุปกรณ์ (`/equipment-mg`) | Add, change and delete articles and equipment names, kept on the server (shared, like drafts; a change from a page opened before someone else's is refused and keeps what was typed). An equipment entry names one of the app's own pictures, one entry per picture, and its picture never changes: a new entry can only name a picture whose entry was deleted. **None of it goes into the package** |
 | แก้ไขเคส (`/drafts/{id}`) | Tabs: the case's fields, each step (name, mechanic, reading, the doctor's line, vitals, and its tasks: choices, sequence, trays, unordered drop, with their cards, pictures and answers), and the whole case as JSON. A bedside preview of the open step's monitor and the doctor's line; a step can be copied; MAP can be filled from BP and a missing % added to SpO2, each only when its button is pressed |
 | บัญชีผู้ใช้ (`/users`) | Admin only: add an account (Admin or พยาบาล), change it, switch it off, set its password |
@@ -113,7 +114,8 @@ right. Every page but sign-in loads when first opened.
 ## API
 
 Every route needs a signed-in account except `GET /api/meta`, `GET /api/auth/session`, `POST
-/api/auth/signin`, `POST /api/auth/signout` and the two Google routes; `/api/users` needs an admin.
+/api/auth/signin`, `POST /api/auth/signout`, the two Google routes and the app's feed (`/api/published`);
+`/api/users` needs an admin.
 
 | Route | What |
 |---|---|
@@ -135,6 +137,9 @@ Every route needs a signed-in account except `GET /api/meta`, `GET /api/auth/ses
 | `POST /api/check` `{"case": {...}}` | The problems of a case, without saving |
 | `POST /api/import` (body: the file) | Every case of a package or an older case file, as new drafts |
 | `GET /api/package` | Every draft as one package, only if the app would accept it; else `422` with the problems |
+| `POST /api/publish`, `GET /api/publish` | Publish every draft to the app as the next revision, checked as the export (`422 empty`, `422 not-ready` with the problems); the revisions, newest first, with who published them |
+| `GET /api/published` | **Public, for the app:** the newest revision `{"revision", "publishedAt", "cases", "package"}` (no names), `404 none` before the first; never cached; `Access-Control-Allow-Origin: *` |
+| `GET /api/published/{revision}` | **Public:** that revision's package, byte for byte: a version 1 package that also says `revision` and `publishedAt`. A revision never changes, so it is cached for good |
 | `GET /api/equipment` | The equipment names, one per picture of the app: `id`, `file`, `nameTh`, `nameEn`, `category`, `version`, who changed it last |
 | `POST /api/equipment` `{"file", "nameTh", "nameEn", "category"}` | Name a picture; `422 picture-unknown` (not one of the app's pictures), `409 picture-taken` (it has a name) |
 | `PUT /api/equipment/{id}` `{"version", "nameTh", "nameEn", "category"}`, `DELETE /api/equipment/{id}?version=n` | Change (the picture stays) or delete; `409 stale`, `404` as for drafts |

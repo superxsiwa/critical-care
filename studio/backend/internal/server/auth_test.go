@@ -34,6 +34,7 @@ func TestEveryClosedRouteNeedsASession(t *testing.T) {
 		{"GET", "/api/equipment"}, {"POST", "/api/equipment"}, {"PUT", "/api/equipment/1"},
 		{"DELETE", "/api/equipment/1?version=1"}, {"GET", "/api/knowledge"}, {"POST", "/api/knowledge"},
 		{"PUT", "/api/knowledge/1"}, {"DELETE", "/api/knowledge/1?version=1"},
+		{"GET", "/api/publish"}, {"POST", "/api/publish"},
 		{"PUT", "/api/auth/password"}, {"GET", "/api/nothing"},
 	}
 	for _, r := range closed {

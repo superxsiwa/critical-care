@@ -1,6 +1,7 @@
-import { Component, inject } from '@angular/core';
+import { Component, computed, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { draftList } from '../api/drafts';
+import { publishedList } from '../api/lists';
 import { MetaStore } from '../api/meta';
 import { formatTime } from '../ui/words';
 
@@ -15,6 +16,16 @@ import { formatTime } from '../ui/words';
         <p class="text-sm text-ink-2">
           ข้อมูลเชิงสรุปสถานะเคสจำลองและเตียงผู้ป่วยวิกฤตทั้งหมดในระบบ
         </p>
+        @if (published()[0]; as p) {
+          <p class="mt-1 text-sm text-ink-2">
+            <span class="font-medium text-ink">ในแอปตอนนี้: ฉบับที่ {{ p.revision }}</span>
+            · {{ p.cases }} เคส · ประกาศใช้ {{ time(p.publishedAt) }}
+          </p>
+        } @else if (publishedLoaded()) {
+          <p class="mt-1 text-sm text-ink-2">
+            ยังไม่เคยประกาศใช้ในแอป (จัดการเคส › ประกาศใช้ในแอป)
+          </p>
+        }
       </div>
 
       <!-- การ์ดสถิติสรุป (Summary KPI Cards) -->
@@ -166,6 +177,9 @@ export class BoardPage {
   protected readonly items = this.list.items;
   protected readonly readyCount = this.list.ready;
   protected readonly problemCount = this.list.withProblems;
+  private readonly publishedSets = publishedList();
+  protected readonly published = this.publishedSets.items;
+  protected readonly publishedLoaded = computed(() => this.publishedSets.resource.hasValue());
 
   protected time(iso: string): string {
     return formatTime(iso);

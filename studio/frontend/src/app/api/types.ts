@@ -106,3 +106,15 @@ export interface KnowledgeArticle {
 
 /** What an author writes of an article. */
 export type ArticleText = Pick<KnowledgeArticle, 'title' | 'category' | 'summary' | 'content'>;
+
+/**
+ * A case set published to the app (step 10): every draft at that moment, as one package the app
+ * follows through the studio's public feed. A revision never changes.
+ */
+export interface PublishedRevision {
+  revision: number;
+  publishedAt: string;
+  cases: number;
+  /** Who published it ("" when unknown). */
+  publishedBy: string;
+}

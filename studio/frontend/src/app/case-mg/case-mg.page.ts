@@ -1,6 +1,7 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { draftList } from '../api/drafts';
+import { publishedList } from '../api/lists';
 import { MetaStore } from '../api/meta';
 import { ApiError, StudioApi } from '../api/studio-api';
 import { DraftItem } from '../api/types';
@@ -55,8 +56,29 @@ interface Refused {
           >
             ส่งออกแพ็กเกจ
           </button>
+          <button
+            type="button"
+            class="btn btn-primary text-xs"
+            [disabled]="busy() || !items().length"
+            (click)="publish()"
+          >
+            ประกาศใช้ในแอป
+          </button>
         </div>
       </div>
+
+      <!-- What the app follows now (step 10): the newest published revision -->
+      <p class="text-sm text-ink-2" role="status" aria-live="polite">
+        @if (published()[0]; as p) {
+          <span class="font-medium text-ink">ในแอปตอนนี้: ฉบับที่ {{ p.revision }}</span>
+          · {{ p.cases }} เคส · ประกาศใช้ {{ time(p.publishedAt) }}
+          @if (p.publishedBy) {
+            โดย {{ p.publishedBy }}
+          }
+        } @else if (publishedLoaded()) {
+          ยังไม่เคยประกาศใช้ในแอป: แอปที่รับเคสจากสตูดิโอยังเล่นเคสตั้งต้นของแอป
+        }
+      </p>
 
       <!-- Refused alert banner -->
       @if (refused(); as r) {
@@ -181,6 +203,10 @@ export class CaseMgPage {
   private readonly toasts = inject(Toasts);
 
   protected readonly drafts = draftList().resource;
+  private readonly publishedSets = publishedList();
+  /** The published revisions, newest first: the first is what the app follows. */
+  protected readonly published = this.publishedSets.items;
+  protected readonly publishedLoaded = computed(() => this.publishedSets.resource.hasValue());
   protected readonly items = computed(() => (this.drafts.hasValue() ? this.drafts.value() : []));
   protected readonly busy = signal(false);
   protected readonly refused = signal<Refused | null>(null);
@@ -284,6 +310,41 @@ export class CaseMgPage {
         } else this.toasts.show('นำเข้าไม่สำเร็จ: ' + failure(err), true);
       }
       this.drafts.reload();
+    });
+  }
+
+  /**
+   * Publishes every draft to the app as the next revision, after asking. The app would refuse a set
+   * with problems: then nothing is published and the problems are listed, as for the export.
+   */
+  protected async publish(): Promise<void> {
+    const n = this.items().length;
+    const yes = await this.confirm.ask({
+      title: `ประกาศใช้ทั้ง ${n} เคสในแอป?`,
+      body:
+        'แอปที่รับเคสจากสตูดิโอจะได้ชุดเคสนี้แทนชุดเดิมเมื่อตรวจหาเคสใหม่ครั้งถัดไป ' +
+        'ความก้าวหน้าของผู้เล่นยังอยู่ตามหมายเลขเตียง',
+      yes: 'ประกาศใช้',
+    });
+    if (!yes) return;
+    await this.run(async () => {
+      this.refused.set(null);
+      try {
+        const p = await this.api.publish();
+        this.toasts.show(`ประกาศใช้ฉบับที่ ${p.revision} ในแอปแล้ว (${p.cases} เคส)`);
+      } catch (e) {
+        if (e instanceof ApiError && e.code === 'not-ready') {
+          const list = this.items();
+          this.refused.set({
+            title: 'ยังประกาศใช้ไม่ได้: แอปจะไม่รับชุดเคสนี้',
+            lines: (e.body.problems ?? []).map((text) => {
+              const m = /^case (\d+)/.exec(text);
+              return { text, draft: m ? (list[Number(m[1]) - 1] ?? null) : null };
+            }),
+          });
+        } else this.toasts.show('ประกาศใช้ไม่สำเร็จ: ' + failure(e), true);
+      }
+      this.publishedSets.resource.reload();
     });
   }
 

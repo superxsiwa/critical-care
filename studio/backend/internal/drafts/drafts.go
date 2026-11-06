@@ -25,7 +25,8 @@ const (
 	importLimit = 10 << 20 // a file of many cases
 )
 
-// Service answers the /api/drafts, /api/check, /api/import, /api/package and /api/meta routes.
+// Service answers the /api/drafts, /api/check, /api/import, /api/package and /api/meta routes, and
+// publishing to the app (/api/publish, and the app's public feed /api/published).
 type Service struct {
 	DB  *sql.DB
 	Log *slog.Logger
@@ -45,6 +46,7 @@ func (s *Service) Mount(mux *http.ServeMux) {
 	mux.HandleFunc("POST /api/check", s.check)
 	mux.HandleFunc("POST /api/import", s.importFile)
 	mux.HandleFunc("GET /api/package", s.exportPackage)
+	s.mountPublishing(mux)
 }
 
 // Item is a draft in the list. Drafts are shared by every instructor; updatedBy names who saved last

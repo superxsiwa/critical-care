@@ -63,7 +63,14 @@ test('every field of the case package has words for the problem list', () => {
       }
   };
   walk(schema);
-  const fileLevel = new Set(['cases', 'format', 'version', 'exportedAt']);
+  const fileLevel = new Set([
+    'cases',
+    'format',
+    'version',
+    'exportedAt',
+    'revision',
+    'publishedAt',
+  ]);
   const untranslated = [...keys].filter((k) => !fileLevel.has(k) && describePath('$.' + k) === k);
   expect(untranslated).toEqual([]);
   expect(describePath('$.stageData[1].traysTask.pool[2].img')).toBe(

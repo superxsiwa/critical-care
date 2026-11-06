@@ -9,6 +9,8 @@
     "format": { "const": "critical-care-cases" },
     "version": { "const": 1 },
     "exportedAt": { "type": "string", "format": "date-time" },
+    "revision": { "type": "integer", "minimum": 1, "description": "A published revision (the studio's feed, step 10); absent in an export" },
+    "publishedAt": { "type": "string", "format": "date-time", "description": "When that revision was published" },
     "cases": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/case" } }
   },
   "$defs": {
