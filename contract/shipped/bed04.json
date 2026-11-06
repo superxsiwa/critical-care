@@ -1,0 +1,351 @@
+{
+  "bedNum": 4,
+  "bedCode": "เตียง 04 CCU",
+  "patientName": "นางปราณี (59 ปี)",
+  "patientAge": 59,
+  "caseTitle": "ตั้งเครื่องกระตุ้นหัวใจชั่วคราว (TPM)",
+  "dxBadge": "Complete Heart Block",
+  "status": "alert",
+  "statusText": "HR 34 bpm",
+  "doctorName": "นพ. ธีรภพ (อายุรแพทย์หัวใจ)",
+  "doctorAvatar": "👨‍⚕️",
+  "stayDuration": "วันที่ 2 ใน CCU",
+  "clinicalNote": "Mobitz II progression สู่ CHB ต้องใส่ TPM ด่วน",
+  "stageData": [
+    {
+      "id": 1,
+      "name": "1. เตรียมคนไข้",
+      "mechanic": "เลือก 1|N + เรียงลำดับ",
+      "reading": "ผู้ป่วย Complete Heart Block (3rd Degree AV Block) HR 34 bpm หน้ามืด ต้องเตรียมติด Pacing pads สำรอง เช็กแบตเตอรี่เครื่อง Pulse Generator และจัดท่าใส่สาย Transvenous Pacing",
+      "doctorSpeech": "💬 \"คนไข้เป็น Complete Heart Block HR เหลือ 34 ครั้ง/นาที ช่วยเตรียมความพร้อมใส่สายกระตุ้นหัวใจชั่วคราว (TPM) ด่วนครับ!\"",
+      "vitals": {
+        "hr": 34,
+        "bp": "84/50",
+        "spo2": "94%",
+        "map": 61
+      },
+      "choices1toN": {
+        "prompt": "1.1 เลือกสิ่งที่ต้องตรวจสอบก่อนใส่และตั้งเครื่อง TPM (เลือกได้หลายข้อ)",
+        "options": [
+          {
+            "id": "tc1",
+            "text": "ตรวจสอบแบตเตอรี่ก้อนใหม่ 9V ในเครื่อง Pulse Generator",
+            "correct": true
+          },
+          {
+            "id": "tc2",
+            "text": "ติดแผ่น Transcutaneous Pacing Pads สำรองเผื่อหัวใจหยุดเต้น",
+            "correct": true
+          },
+          {
+            "id": "tc3",
+            "text": "ตรวจผลเกลือแร่ Potassium (K+), Magnesium และใบยินยอม",
+            "correct": true
+          },
+          {
+            "id": "tc4",
+            "text": "ฉีดยา Beta-blocker เพิ่มเพื่อให้หัวใจเต้นช้าลงอีก",
+            "correct": false
+          }
+        ]
+      },
+      "sequenceTask": {
+        "prompt": "1.2 เรียงลำดับขั้นตอนเตรียมผู้ป่วยใส่ TPM (1 ➔ 4)",
+        "pool": [
+          {
+            "id": "ts3",
+            "text": "จัดท่านอนราบศีรษะต่ำเล็กน้อย เปิดบริเวณคอขวาเพื่อสอดสาย Pacing Lead"
+          },
+          {
+            "id": "ts1",
+            "text": "ยืนยันตัวตน อธิบายผู้ป่วยว่าจะใส่สายกระตุ้นหัวใจช่วยแก้ภาวะหัวใจเต้นช้า"
+          },
+          {
+            "id": "ts4",
+            "text": "ทดสอบเครื่อง Pulse Generator และเตรียมสาย Bridging cable ให้พร้อม"
+          },
+          {
+            "id": "ts2",
+            "text": "ติดมอนิเตอร์คลื่นไฟฟ้าหัวใจ Continuous ECG Lead II และเปิดเส้น IV"
+          }
+        ],
+        "correctOrder": [
+          "ts1",
+          "ts2",
+          "ts3",
+          "ts4"
+        ]
+      }
+    },
+    {
+      "id": 2,
+      "name": "2. เตรียมถาด",
+      "mechanic": "จัด 2 ถาด (ไม่เรียงลำดับ)",
+      "reading": "แยกอุปกรณ์ลงในถาดปลอดเชื้อสำหรับสอดสาย Bipolar Pacing Electrode และถาดเครื่องควบคุมจังหวะหัวใจ (Pulse Generator) ข้างเตียง",
+      "doctorSpeech": "💬 \"จัดถาดสอดสาย Pacing ปลอดเชื้อ กับ ถาดเครื่อง Pulse Generator ข้างเตียงให้หมอด่วนครับ\"",
+      "vitals": {
+        "hr": 36,
+        "bp": "86/52",
+        "spo2": "95%",
+        "map": 63
+      },
+      "traysTask": {
+        "ordered": false,
+        "prompt": "หยิบอุปกรณ์ลงใน 2 ถาดให้ถูกต้อง",
+        "trays": [
+          {
+            "id": "ttr1",
+            "name": "🟩 ถาดสอดสายกระตุ้นปลอดเชื้อ (Sterile Pacing Tray)",
+            "sterile": true,
+            "expectedIds": [
+              "te1",
+              "te2",
+              "te3",
+              "te4"
+            ]
+          },
+          {
+            "id": "ttr2",
+            "name": "🟦 ถาดเครื่องกระตุ้นและมอนิเตอร์ข้างเตียง (Generator Tray)",
+            "sterile": false,
+            "expectedIds": [
+              "te5",
+              "te6",
+              "te7"
+            ]
+          }
+        ],
+        "pool": [
+          {
+            "id": "te1",
+            "text": "สาย Bipolar Pacing Lead",
+            "img": "./assets/equipment/iv_bag.png"
+          },
+          {
+            "id": "te5",
+            "text": "เครื่อง Pulse Generator",
+            "img": "./assets/equipment/ecg_monitor.png"
+          },
+          {
+            "id": "te2",
+            "text": "ชุด Introducer Sheath",
+            "img": "./assets/equipment/first_aid_kit.png"
+          },
+          {
+            "id": "te6",
+            "text": "ยาฉุกเฉิน Atropine",
+            "img": "./assets/equipment/medicine_bottle.png"
+          },
+          {
+            "id": "te3",
+            "text": "เข็มและไซริงค์ฉีดยาชา",
+            "img": "./assets/equipment/syringe.png"
+          },
+          {
+            "id": "te7",
+            "text": "เครื่องวัดความดันอัตโนมัติ",
+            "img": "./assets/equipment/bp_monitor.png"
+          },
+          {
+            "id": "te4",
+            "text": "ชุดเย็บยึดสายและคีมคีบ",
+            "img": "./assets/equipment/scissors_forceps.png"
+          }
+        ]
+      }
+    },
+    {
+      "id": 3,
+      "name": "3. ส่งเครื่องมือ",
+      "mechanic": "จัด 2 ถาด (เรียงลำดับ 1-3)",
+      "reading": "ระยะที่ 1 สอดสายเข้าสู่ Right Ventricle ระยะที่ 2 ต่อขั้วลบ/บวกเข้าเครื่อง ตั้งค่า Rate, หา Stimulation Threshold แล้วตั้ง Output สูงกว่า Threshold 2-3 เท่า",
+      "doctorSpeech": "💬 \"ส่งอุปกรณ์สอดสายระยะที่ 1 และตั้งค่าเครื่องกระตุ้นในระยะที่ 2 เรียง 1 ➔ 2 ➔ 3 เลยครับ\"",
+      "vitals": {
+        "hr": 38,
+        "bp": "88/54",
+        "spo2": "96%",
+        "map": 65
+      },
+      "traysTask": {
+        "ordered": true,
+        "prompt": "ส่งอุปกรณ์และตั้งค่าลงถาดระยะ 1 และ 2 โดย **ต้องเรียงลำดับก่อน-หลัง (1 ➔ 2 ➔ 3)**",
+        "trays": [
+          {
+            "id": "tdtr1",
+            "name": "🟩 ถาดระยะที่ 1: สอดสาย Pacing สู่หัวใจห้องล่างขวา (เรียง 1 ➔ 3)",
+            "sterile": true,
+            "expectedOrder": [
+              "td1",
+              "td2",
+              "td3"
+            ]
+          },
+          {
+            "id": "tdtr2",
+            "name": "🟦 ถาดระยะที่ 2: ต่อสาย & ตั้งค่าเครื่อง TPM (เรียง 1 ➔ 3)",
+            "sterile": false,
+            "expectedOrder": [
+              "td4",
+              "td5",
+              "td6"
+            ]
+          }
+        ],
+        "pool": [
+          {
+            "id": "td3",
+            "text": "สอดสาย Pacing Electrode ผ่าน Sheath เข้าไปแตะผนัง Right Ventricle"
+          },
+          {
+            "id": "td1",
+            "text": "เช็ดผิวด้วย Chlorhexidine ปูผ้าเจาะกลาง และฉีดยาชาเฉพาะที่"
+          },
+          {
+            "id": "td6",
+            "text": "ตั้งค่า Output (mA) เป็น 2-3 เท่าของ Threshold และตั้ง Sensitivity (2-3 mV)"
+          },
+          {
+            "id": "td2",
+            "text": "แทงเปิดหลอดเลือดดำและใส่สาย Introducer Sheath"
+          },
+          {
+            "id": "td5",
+            "text": "ตั้ง Rate ที่ 75 bpm และค่อยๆ ปรับหาค่า Stimulation Threshold"
+          },
+          {
+            "id": "td4",
+            "text": "ต่อขั้วสาย Distal (-) และ Proximal (+) เข้ากับสาย Bridging cable ของเครื่อง"
+          }
+        ]
+      }
+    },
+    {
+      "id": 4,
+      "name": "4. ปฏิบัติการพยาบาล",
+      "mechanic": "ลาก-วาง ไม่เป็นลำดับ",
+      "reading": "ตรวจสอบ Electrical Capture (มี Pacing Spike นำหน้า Wide QRS ทุกจังหวะ) และ Mechanical Capture (คลำชีพจรแรงตรงกับอัตราที่ตั้งไว้) รวมถึงป้องกันไฟรั่วเข้าหัวใจ (Microshock)",
+      "doctorSpeech": "💬 \"เปิดเครื่องกระตุ้นที่ 75 bpm แล้วครับ ช่วยเฝ้าระวังการจับสัญญาณ (Capture) และความปลอดภัยทางไฟฟ้าด้วยครับ\"",
+      "vitals": {
+        "hr": 75,
+        "bp": "112/70",
+        "spo2": "98%",
+        "map": 84
+      },
+      "unorderedDropTask": {
+        "prompt": "ลากการพยาบาลที่ถูกต้อง (4 ข้อ) ลงในพื้นที่ปฏิบัติงาน (วางสลับลำดับได้)",
+        "expectedIds": [
+          "ta1",
+          "ta2",
+          "ta3",
+          "ta4"
+        ],
+        "pool": [
+          {
+            "id": "ta1",
+            "text": "📈 ตรวจดู Pacing Spike นำหน้า QRS complex ทุกตัว (100% Electrical Capture)"
+          },
+          {
+            "id": "taw1",
+            "text": "ใช้มือเปล่าที่เปียกน้ำจับขั้วโลหะของสาย Pacing โดยไม่สวมถุงมือยาง"
+          },
+          {
+            "id": "ta2",
+            "text": "💓 คลำชีพจร Radial/Femoral เทียบกับมอนิเตอร์ ยืนยัน Mechanical Capture"
+          },
+          {
+            "id": "ta3",
+            "text": "🧤 สวมถุงมือยางทุกครั้งที่สัมผัสขั้วสาย และหุ้มข้อต่อให้มิดชิดป้องกัน Microshock"
+          },
+          {
+            "id": "taw2",
+            "text": "ปรับเพิ่มค่า Sensitivity เป็น 20 mV เพื่อให้เครื่องไม่รับรู้คลื่นหัวใจผู้ป่วยเลย"
+          },
+          {
+            "id": "ta4",
+            "text": "🔒 ปิดฝาพลาสติกใสครอบปุ่มหมุนเครื่อง TPM และแขวนเครื่องในจุดที่ปลอดภัย"
+          }
+        ]
+      }
+    },
+    {
+      "id": 5,
+      "name": "5. ดูแลหลังทำ",
+      "mechanic": "ลาก-วาง เรียงลำดับ",
+      "reading": "บันทึกขีดความลึกสาย ส่งทำ CXR และ 12-lead ECG ยืนยันปลายสายที่ RV apex และตรวจสอบ Pacing/Sensing threshold ทุกเวร",
+      "doctorSpeech": "💬 \"หัวใจเต้นตามเครื่องดีที่ 75 ครั้ง/นาที ความดันขึ้นมา 118/74 แล้ว ฝากดูแลต่อเนื่องตามลำดับครับ\"",
+      "vitals": {
+        "hr": 75,
+        "bp": "118/74",
+        "spo2": "99%",
+        "map": 88
+      },
+      "sequenceTask": {
+        "prompt": "ลาก-วาง ขั้นตอนการดูแลหลังใส่เครื่อง TPM เรียงตามลำดับ (1 ➔ 4)",
+        "pool": [
+          {
+            "id": "tp3",
+            "text": "ส่งทำ Chest X-ray ยืนยันตำแหน่งปลายสายที่ RV Apex และเช็ก Pneumothorax"
+          },
+          {
+            "id": "tp1",
+            "text": "ยึดตรึงสาย Pacing ที่ผิวหนัง ปิดแผล Sterile และบันทึกขีดความลึกของสาย"
+          },
+          {
+            "id": "tp4",
+            "text": "จำกัดการยกแขนหรือหันคอแรงๆ และตรวจเช็กค่า Rate/Output/Sensitivity ทุกเวร"
+          },
+          {
+            "id": "tp2",
+            "text": "ทำคลื่นไฟฟ้าหัวใจ 12-Lead ECG บันทึกลักษณะ LBBB pattern จากการกระตุ้น RV"
+          }
+        ],
+        "correctOrder": [
+          "tp1",
+          "tp2",
+          "tp3",
+          "tp4"
+        ]
+      }
+    },
+    {
+      "id": 6,
+      "name": "6. สรุป & ส่งเวร",
+      "mechanic": "สรุป ISBAR เรียงลำดับ",
+      "reading": "สรุปโหมดเครื่อง (VVI), Rate, Output (mA), Sensitivity (mV), และความลึกสาย ส่งต่อเวรถัดไปตามหลัก ISBAR",
+      "doctorSpeech": "💬 \"คนไข้ปลอดภัยดีแล้วครับ สรุปค่าพารามิเตอร์เครื่อง TPM ส่งเวรตามลำดับ ISBAR ได้เลยครับ\"",
+      "vitals": {
+        "hr": 75,
+        "bp": "120/76",
+        "spo2": "99%",
+        "map": 90
+      },
+      "sequenceTask": {
+        "prompt": "ลาก-วาง สรุปบันทึกส่งเวรตามโครงสร้าง ISBAR (1 ➔ 4)",
+        "pool": [
+          {
+            "id": "tis2",
+            "text": "[B - Background] ใส่ Transvenous TPM ทาง Right IJ ลึก 35 cm ตั้งโหมด VVI Rate 75, Output 5 mA, Sens 2 mV"
+          },
+          {
+            "id": "tis4",
+            "text": "[R - Recommendation] เฝ้าระวัง: Loss of capture, เช็กแบตเตอรี่และขีดสาย 35 cm ทุกเวร รอใส่ Permanent Pacemaker"
+          },
+          {
+            "id": "tis1",
+            "text": "[I & S] นางปราณี เตียง 04 Complete Heart Block หลังใส่เครื่องกระตุ้นหัวใจชั่วคราว (TPM)"
+          },
+          {
+            "id": "tis3",
+            "text": "[A - Assessment] ECG จับ 100% Ventricular Capture ที่ 75 bpm, BP 120/76 mmHg, ไม่มีอาการหน้ามืด"
+          }
+        ],
+        "correctOrder": [
+          "tis1",
+          "tis2",
+          "tis3",
+          "tis4"
+        ]
+      }
+    }
+  ]
+}

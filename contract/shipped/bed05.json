@@ -1,0 +1,351 @@
+{
+  "bedNum": 5,
+  "bedCode": "เตียง 05 CCU",
+  "patientName": "นายสมบัติ (62 ปี)",
+  "patientAge": 62,
+  "caseTitle": "เปิดเส้นให้ยา Levophed ทาง Central Line",
+  "dxBadge": "Cardiogenic Shock",
+  "status": "critical",
+  "statusText": "Titrate ยา MAP>65",
+  "doctorName": "นพ. กิตติ (แพทย์ CCU)",
+  "doctorAvatar": "👨‍⚕️",
+  "stayDuration": "วันที่ 4 ใน CCU",
+  "clinicalNote": "Cardiogenic Shock วันที่ 4 ปรับ Levophed",
+  "stageData": [
+    {
+      "id": 1,
+      "name": "1. เตรียมคนไข้",
+      "mechanic": "เลือก 1|N + เรียงลำดับ",
+      "reading": "ยา Levophed (Norepinephrine) เป็นยากลุ่ม High-Alert Drug (HAD) ต้องผสมใน 5%D/W เท่านั้น และต้องให้ทาง Central Line พร้อม Independent Double Check",
+      "doctorSpeech": "💬 \"คนไข้ Cardiogenic Shock ค่า MAP ตกเหลือ 54 mmHg ช่วยเตรียมให้ยา Levophed ทางสาย CVC ด่วนครับ!\"",
+      "vitals": {
+        "hr": 116,
+        "bp": "76/44",
+        "spo2": "94%",
+        "map": 54
+      },
+      "choices1toN": {
+        "prompt": "1.1 เลือกหลักความปลอดภัยก่อนบริหารยา Levophed (เลือกได้หลายข้อ)",
+        "options": [
+          {
+            "id": "lc1",
+            "text": "ทำ Independent Double Check ชื่อยา ความเข้มข้น และอัตราไหลกับพยาบาลอีกท่าน",
+            "correct": true
+          },
+          {
+            "id": "lc2",
+            "text": "ผสมยา Levophed ในสารละลายที่มี Dextrose เช่น 5%D/W เพื่อคงความคงตัวของยา",
+            "correct": true
+          },
+          {
+            "id": "lc3",
+            "text": "ตรวจสอบตำแหน่งและการไหลเวียนของสาย Central Line (CVC) ก่อนต่อยา",
+            "correct": true
+          },
+          {
+            "id": "lc4",
+            "text": "ฉีดยา Levophed เข้มข้นแบบ IV Push เร็วๆ เข้าเส้นเลือดส่วนปลายที่หลังมือ",
+            "correct": false
+          }
+        ]
+      },
+      "sequenceTask": {
+        "prompt": "1.2 เรียงลำดับการเตรียมผู้ป่วยและตรวจสอบสายก่อนให้ยา (1 ➔ 4)",
+        "pool": [
+          {
+            "id": "ls3",
+            "text": "ใช้ไซริงค์ดูดเลือดย้อนจาก Lumen ของสาย CVC เพื่อยืนยันว่าสายไม่อุดตัน"
+          },
+          {
+            "id": "ls1",
+            "text": "ยืนยันตัวตนผู้ป่วย 2 ตัวบ่งชี้ และประเมินความดันโลหิต/MAP Baseline"
+          },
+          {
+            "id": "ls4",
+            "text": "ติดป้ายฉลากยา High-Alert Drug สีแดงที่ขวดยาและสายยางใกล้ตัวผู้ป่วย"
+          },
+          {
+            "id": "ls2",
+            "text": "ตรวจสอบคำสั่งการรักษาและคำนวณขนาดยา (mcg/kg/min) ร่วมกับพยาบาลวิชาชีพอีกคน"
+          }
+        ],
+        "correctOrder": [
+          "ls1",
+          "ls2",
+          "ls3",
+          "ls4"
+        ]
+      }
+    },
+    {
+      "id": 2,
+      "name": "2. เตรียมถาด",
+      "mechanic": "จัด 2 ถาด (ไม่เรียงลำดับ)",
+      "reading": "เตรียมถาดผสมและบริหารยาความเสี่ยงสูง (Levophed + 5%D/W + Infusion Pump) แยกกับถาดเฝ้าระวังสัญญาณชีพและแก้ภาวะแทรกซ้อนข้างเตียง",
+      "doctorSpeech": "💬 \"จัดเตรียมอุปกรณ์ผสมยา Levophed กับ ถาดเฝ้าระวังสัญญาณชีพข้างเตียงให้ครบถ้วนนะครับ\"",
+      "vitals": {
+        "hr": 118,
+        "bp": "78/46",
+        "spo2": "95%",
+        "map": 56
+      },
+      "traysTask": {
+        "ordered": false,
+        "prompt": "หยิบอุปกรณ์ลงใน 2 ถาดให้ถูกต้อง",
+        "trays": [
+          {
+            "id": "ltr1",
+            "name": "🟩 ถาดเตรียมยา High-Alert & Infusion (Medication Tray)",
+            "sterile": true,
+            "expectedIds": [
+              "le1",
+              "le2",
+              "le3",
+              "le4"
+            ]
+          },
+          {
+            "id": "ltr2",
+            "name": "🟦 ถาดเฝ้าระวังความดันและแก้พิษข้างเตียง (Monitoring Tray)",
+            "sterile": false,
+            "expectedIds": [
+              "le5",
+              "le6",
+              "le7"
+            ]
+          }
+        ],
+        "pool": [
+          {
+            "id": "le1",
+            "text": "ยา Levophed (4 mg)",
+            "img": "./assets/equipment/medicine_bottle.png"
+          },
+          {
+            "id": "le5",
+            "text": "เครื่องวัดความดัน/A-Line",
+            "img": "./assets/equipment/bp_monitor.png"
+          },
+          {
+            "id": "le2",
+            "text": "สารละลาย 5%D/W 250 ml",
+            "img": "./assets/equipment/iv_bag.png"
+          },
+          {
+            "id": "le6",
+            "text": "มอนิเตอร์คลื่นหัวใจ EKG",
+            "img": "./assets/equipment/ecg_monitor.png"
+          },
+          {
+            "id": "le3",
+            "text": "ไซริงค์ดูดผสมยาปลอดเชื้อ",
+            "img": "./assets/equipment/syringe.png"
+          },
+          {
+            "id": "le7",
+            "text": "แฟ้มตาราง Titration ยา",
+            "img": "./assets/equipment/medical_chart.png"
+          },
+          {
+            "id": "le4",
+            "text": "ชุดสายให้สารน้ำทึบแสง",
+            "img": "./assets/equipment/iv_bag.png"
+          }
+        ]
+      }
+    },
+    {
+      "id": 3,
+      "name": "3. ส่งเครื่องมือ",
+      "mechanic": "จัด 2 ถาด (เรียงลำดับ 1-3)",
+      "reading": "ระยะที่ 1 ผสมยาและไล่สายให้ไร้ฟองอากาศ ระยะที่ 2 ต่อเข้า Dedicated Lumen ของ CVC และเริ่ม Titrate ยาจนได้เป้าหมาย MAP ≥ 65 mmHg",
+      "doctorSpeech": "💬 \"ดำเนินการผสมยา ไล่สาย และตั้งเครื่อง Infusion Pump เรียงตามลำดับ 1 ➔ 2 ➔ 3 เลยครับ\"",
+      "vitals": {
+        "hr": 114,
+        "bp": "80/48",
+        "spo2": "96%",
+        "map": 58
+      },
+      "traysTask": {
+        "ordered": true,
+        "prompt": "ดำเนินการในถาดระยะ 1 และ 2 โดย **ต้องเรียงลำดับก่อน-หลัง (1 ➔ 2 ➔ 3)**",
+        "trays": [
+          {
+            "id": "ldtr1",
+            "name": "🟩 ถาดระยะที่ 1: ผสมยา & ไล่สายเข้าเครื่อง Pump (เรียง 1 ➔ 3)",
+            "sterile": true,
+            "expectedOrder": [
+              "ld1",
+              "ld2",
+              "ld3"
+            ]
+          },
+          {
+            "id": "ldtr2",
+            "name": "🟦 ถาดระยะที่ 2: ต่อสาย CVC & ปรับขนาดยา (เรียง 1 ➔ 3)",
+            "sterile": false,
+            "expectedOrder": [
+              "ld4",
+              "ld5",
+              "ld6"
+            ]
+          }
+        ],
+        "pool": [
+          {
+            "id": "ld3",
+            "text": "ประกอบสายเข้าเครื่อง Infusion Pump และตั้งค่า Rate เริ่มต้นตามแผนการรักษา"
+          },
+          {
+            "id": "ld1",
+            "text": "ผสม Levophed 4 mg ใน 5%D/W 250 ml (ความเข้มข้น 16 mcg/ml) ด้วยเทคนิคปลอดเชื้อ"
+          },
+          {
+            "id": "ld6",
+            "text": "ประเมิน BP/MAP ทุก 5-15 นาที และปรับเพิ่ม/ลด (Titrate) จนได้ MAP ≥ 65 mmHg"
+          },
+          {
+            "id": "ld2",
+            "text": "ต่อชุดสายให้สารน้ำและไล่อากาศ (Prime line) จนเต็มสายไม่มีฟองอากาศ"
+          },
+          {
+            "id": "ld5",
+            "text": "กดปุ่ม Start เดินยาอย่างต่อเนื่อง พร้อมห้าม Bolus ยาอื่นในเส้นเดียวกันเด็ดขาด"
+          },
+          {
+            "id": "ld4",
+            "text": "เช็ดหัวจุกด้วย 70% Alcohol และต่อสายยาเข้า Dedicated Lumen ของสาย CVC"
+          }
+        ]
+      }
+    },
+    {
+      "id": 4,
+      "name": "4. ปฏิบัติการพยาบาล",
+      "mechanic": "ลาก-วาง ไม่เป็นลำดับ",
+      "reading": "เฝ้าระวังภาวะหัวใจเต้นผิดจังหวะ (Tachyarrhythmia), ภาวะปลายมือปลายเท้าขาดเลือด (Peripheral ischemia), การรั่วซึมของยาออกนอกเส้น (Extravasation) และปริมาณปัสสาวะ",
+      "doctorSpeech": "💬 \"ยาเริ่มเดินแล้วครับ ช่วยเฝ้าระวังการตอบสนองของความดันโลหิตและผลข้างเคียงของยาอย่างใกล้ชิดครับ\"",
+      "vitals": {
+        "hr": 104,
+        "bp": "92/58",
+        "spo2": "98%",
+        "map": 69
+      },
+      "unorderedDropTask": {
+        "prompt": "ลากการพยาบาลที่ถูกต้อง (4 ข้อ) ลงในพื้นที่ปฏิบัติงาน (วางสลับลำดับได้)",
+        "expectedIds": [
+          "la1",
+          "la2",
+          "la3",
+          "la4"
+        ],
+        "pool": [
+          {
+            "id": "la1",
+            "text": "📊 ติดตามค่า MAP อย่างใกล้ชิด รักษาเป้าหมายให้อยู่ในช่วง 65-75 mmHg"
+          },
+          {
+            "id": "law1",
+            "text": "ฉีดยา Bolus น้ำเกลือเร็วๆ เข้าทาง Lumen เดียวกับที่กำลังให้ยา Levophed"
+          },
+          {
+            "id": "la2",
+            "text": "🖐️ ประเมินสีผิว อุณหภูมิปลายมือปลายเท้า และ Capillary refill ระวัง Vasoconstriction"
+          },
+          {
+            "id": "la3",
+            "text": "📈 เฝ้าระวังคลื่น EKG ระวัง Sinus Tachycardia หรือ PVC จากการกระตุ้นหัวใจ"
+          },
+          {
+            "id": "law2",
+            "text": "ปิดเครื่อง Infusion Pump ทันทีเมื่อเห็นว่าค่า MAP ขึ้นมาแตะ 66 mmHg"
+          },
+          {
+            "id": "la4",
+            "text": "💧 ตวงปัสสาวะทุกชั่วโมง (Keep Urine Output ≥ 0.5 ml/kg/hr) และตรวจดูแผล CVC"
+          }
+        ]
+      }
+    },
+    {
+      "id": 5,
+      "name": "5. ดูแลหลังทำ",
+      "mechanic": "ลาก-วาง เรียงลำดับ",
+      "reading": "เมื่อสัญญาณชีพคงที่ ต้องเตรียมขวดสำรองก่อนยาหมด (ป้องกันความดันร่วงเฉียบพลัน) และค่อยๆ ลดระดับยา (Weaning) อย่างเป็นลำดับ",
+      "doctorSpeech": "💬 \"MAP ขึ้นมา 72 mmHg ปัสสาวะออกดีขึ้นแล้ว ฝากดูแลต่อเนื่องและวางแผนปรับยาตามลำดับครับ\"",
+      "vitals": {
+        "hr": 96,
+        "bp": "102/62",
+        "spo2": "99%",
+        "map": 75
+      },
+      "sequenceTask": {
+        "prompt": "ลาก-วาง ขั้นตอนการดูแลต่อเนื่องขณะให้ยา Levophed เรียงตามลำดับ (1 ➔ 4)",
+        "pool": [
+          {
+            "id": "lp3",
+            "text": "เมื่อสภาพไหลเวียนเลือดคงที่ ให้ค่อยๆ ลดอัตราไหลทีละ 1-2 ml/hr ตามเกณฑ์แพทย์"
+          },
+          {
+            "id": "lp1",
+            "text": "บันทึกค่า BP, MAP, HR และอัตราการไหลของยา (ml/hr และ mcg/kg/min) ลงแผ่น Flowsheet"
+          },
+          {
+            "id": "lp4",
+            "text": "ประเมินค่า Lactate และสัญญาณเนื้อเยื่อได้รับออกซิเจนหลังปรับลดขนาดยา"
+          },
+          {
+            "id": "lp2",
+            "text": "เตรียมผสมยาขวดใหม่ไว้ล่วงหน้าเมื่อยาใกล้หมด เพื่อเปลี่ยนขวดแบบต่อเนื่องไม่ให้ยาขาดช่วง"
+          }
+        ],
+        "correctOrder": [
+          "lp1",
+          "lp2",
+          "lp3",
+          "lp4"
+        ]
+      }
+    },
+    {
+      "id": 6,
+      "name": "6. สรุป & ส่งเวร",
+      "mechanic": "สรุป ISBAR เรียงลำดับ",
+      "reading": "สรุปความเข้มข้นยา ช่องทางที่ให้ อัตราไหลปัจจุบัน และการตอบสนองของ MAP/Urine output ส่งต่อตามหลัก ISBAR",
+      "doctorSpeech": "💬 \"ความดันคงที่ MAP 74 mmHg แล้ว สรุปบันทึกส่งเวรตามลำดับ ISBAR ได้เลยครับ\"",
+      "vitals": {
+        "hr": 92,
+        "bp": "104/60",
+        "spo2": "99%",
+        "map": 74
+      },
+      "sequenceTask": {
+        "prompt": "ลาก-วาง สรุปบันทึกส่งเวรตามโครงสร้าง ISBAR (1 ➔ 4)",
+        "pool": [
+          {
+            "id": "lis2",
+            "text": "[B - Background] ให้ยา Levophed (4mg/250ml 5%DW) ทาง Right IJ CVC Distal lumen ปัจจุบัน Rate 8 ml/hr"
+          },
+          {
+            "id": "lis4",
+            "text": "[R - Recommendation] แผน: Titrate ยารักษา MAP ≥ 65 mmHg, เฝ้าระวังปลายมือปลายเท้าเขียว และห้าม Flush เส้นยา"
+          },
+          {
+            "id": "lis1",
+            "text": "[I & S] นายสมบัติ เตียง 05 Cardiogenic Shock ได้รับยา Vasopressor พยุงความดันโลหิต"
+          },
+          {
+            "id": "lis3",
+            "text": "[A - Assessment] ปัจจุบัน BP 104/60 (MAP 74 mmHg), HR 92 bpm, ปัสสาวะออก 45 ml/hr ปลายมืออุ่นดี"
+          }
+        ],
+        "correctOrder": [
+          "lis1",
+          "lis2",
+          "lis3",
+          "lis4"
+        ]
+      }
+    }
+  ]
+}

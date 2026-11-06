@@ -5,7 +5,7 @@ Express app beside this folder (`../frontend`, `../backend`) is the spec: the ga
 cases come from there.
 
 It plays offline: no accounts, no analytics, and nothing about the player leaves the phone. Since step 10
-(2026-11-06) it follows the Case Studio (`../studio`): when it opens with a network, and on ตรวจหาเคสใหม่ in
+(2026-11-06) it follows the Studio (its own repository since 2026-11-06, `med-studio`): when it opens with a network, and on ตรวจหาเคสใหม่ in
 Settings, it asks the studio's public feed for the newest published case set (`lib/data/studio_feed.dart`,
 `lib/data/studio_follow.dart`) and takes it if it is newer and passes the same check as a file import.
 Importing a file or going back to the shipped cases stops following (the switch รับเคสจากสตูดิโอ turns it on
