@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../data/progress_store.dart';
+import '../data/studio_follow.dart';
 import '../features/about/about_screen.dart';
 import '../l10n/generated/app_localizations.dart';
 import 'sfx.dart';
@@ -23,7 +24,24 @@ class _HomeShellState extends ConsumerState<HomeShell> {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) => _noticeOnce());
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _noticeOnce();
+      _studioAtStart();
+    });
+  }
+
+  /// Step 10: when the ward follows the Case Studio, take its newest published cases as the app
+  /// opens. Offline or with the studio down, nothing is said: the game plays the cases it has.
+  Future<void> _studioAtStart() async {
+    final result = await ref.read(studioProvider.notifier).checkAtStart();
+    if (result != StudioCheck.updated || !mounted) return;
+    final info = ref.read(studioProvider).value?.published;
+    final l = AppLocalizations.of(context);
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        SnackBar(content: Text(l.studioUpdated(info?.revision ?? 0, info?.cases ?? 0))),
+      );
   }
 
   /// The "for training only" notice, once per device.

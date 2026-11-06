@@ -330,7 +330,7 @@ class AppLocalizationsTh extends AppLocalizations {
 
   @override
   String get aboutOffline =>
-      'ทำงานออฟไลน์ ไม่ส่งข้อมูลใดๆ ออกจากเครื่อง ความก้าวหน้าเก็บไว้ในเครื่องนี้เท่านั้น';
+      'เล่นได้แบบออฟไลน์ ความก้าวหน้าเก็บไว้ในเครื่องนี้เท่านั้น ไม่ส่งข้อมูลของผู้เล่นออกจากเครื่อง เมื่อรับเคสจากสตูดิโอ แอปขอเพียงชุดเคสล่าสุดที่อาจารย์ประกาศใช้';
 
   @override
   String get aboutLicenses => 'สัญญาอนุญาตโอเพนซอร์ส';
@@ -688,4 +688,60 @@ class AppLocalizationsTh extends AppLocalizations {
 
   @override
   String get restored => 'กู้คืนข้อมูลเรียบร้อย ✅';
+
+  @override
+  String get studioTitle => 'เคสจากสตูดิโอ';
+
+  @override
+  String get studioFollow => 'รับเคสจากสตูดิโอ';
+
+  @override
+  String get studioFollowHint =>
+      'เมื่อเปิดแอปและมีอินเทอร์เน็ต แอปจะใช้ชุดเคสล่าสุดที่อาจารย์ประกาศใช้ในสตูดิโอ';
+
+  @override
+  String get studioCheckNow => '🔄 ตรวจหาเคสใหม่';
+
+  @override
+  String studioPlaying(int revision) {
+    return 'ใช้ชุดเคสฉบับที่ $revision จากสตูดิโอ';
+  }
+
+  @override
+  String studioUpdated(int revision, int count) {
+    return 'อัปเดตเคสจากสตูดิโอแล้ว: ฉบับที่ $revision ($count เคส)';
+  }
+
+  @override
+  String studioUpToDate(int revision) {
+    return 'เป็นชุดเคสล่าสุดแล้ว (ฉบับที่ $revision)';
+  }
+
+  @override
+  String get studioNothing => 'สตูดิโอยังไม่ได้ประกาศใช้เคส: ใช้เคสชุดเดิม';
+
+  @override
+  String get studioUnreachable => 'ติดต่อสตูดิโอไม่ได้: ใช้เคสชุดเดิม';
+
+  @override
+  String studioRefused(int revision) {
+    return 'ชุดเคสฉบับที่ $revision ในสตูดิโอเปิดในแอปนี้ไม่ได้: ใช้เคสชุดเดิม (ลองอัปเดตแอป)';
+  }
+
+  @override
+  String get studioChecking => 'กำลังตรวจหาเคสใหม่…';
+
+  @override
+  String studioCheckedAt(String time) {
+    return 'ตรวจล่าสุด $time';
+  }
+
+  @override
+  String get studioStopsFollowing =>
+      'และจะหยุดรับเคสจากสตูดิโอ (เปิดอีกครั้งได้ที่ รับเคสจากสตูดิโอ)';
+
+  @override
+  String casesFromStudio(int count) {
+    return 'ใช้เคสจากสตูดิโอ $count เคส';
+  }
 }

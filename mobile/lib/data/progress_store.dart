@@ -20,6 +20,28 @@ class GameSettings {
       GameSettings(sound: sound ?? this.sound, haptics: haptics ?? this.haptics);
 }
 
+/// Whether the ward follows the Case Studio's published cases (step 10), and which revision it
+/// plays. Following is on by default; importing a file or going back to the shipped cases turns it
+/// off.
+class StudioLink {
+  const StudioLink({this.follow = true, this.revision, this.checkedAt});
+
+  final bool follow;
+
+  /// The studio revision the ward plays now; null when its cases did not come from the studio.
+  final int? revision;
+
+  /// When the studio last answered a check.
+  final DateTime? checkedAt;
+
+  StudioLink copyWith({bool? follow, int? Function()? revision, DateTime? Function()? checkedAt}) =>
+      StudioLink(
+        follow: follow ?? this.follow,
+        revision: revision == null ? this.revision : revision(),
+        checkedAt: checkedAt == null ? this.checkedAt : checkedAt(),
+      );
+}
+
 /// Where the player's data lives on the device: [DbProgressStore] (SQLite, #19) in the app, a
 /// memory store in widget tests.
 abstract interface class ProgressStore {
@@ -40,8 +62,12 @@ abstract interface class ProgressStore {
   Future<String?> loadImportedCases();
   Future<void> saveImportedCases(String? json);
 
+  Future<StudioLink> loadStudio();
+  Future<void> saveStudio(StudioLink link);
+
   /// A backup replaces progress, roster, imported cases and settings; the first three all or
-  /// nothing.
+  /// nothing. The studio revision is forgotten (the restored cases may be another's), so a ward
+  /// that follows the studio takes the newest set again at its next check.
   Future<void> restore(PlayerData data);
 }
 

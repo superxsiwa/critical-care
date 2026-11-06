@@ -653,7 +653,7 @@ abstract class AppLocalizations {
   /// No description provided for @aboutOffline.
   ///
   /// In th, this message translates to:
-  /// **'ทำงานออฟไลน์ ไม่ส่งข้อมูลใดๆ ออกจากเครื่อง ความก้าวหน้าเก็บไว้ในเครื่องนี้เท่านั้น'**
+  /// **'เล่นได้แบบออฟไลน์ ความก้าวหน้าเก็บไว้ในเครื่องนี้เท่านั้น ไม่ส่งข้อมูลของผู้เล่นออกจากเครื่อง เมื่อรับเคสจากสตูดิโอ แอปขอเพียงชุดเคสล่าสุดที่อาจารย์ประกาศใช้'**
   String get aboutOffline;
 
   /// No description provided for @aboutLicenses.
@@ -1261,6 +1261,90 @@ abstract class AppLocalizations {
   /// In th, this message translates to:
   /// **'กู้คืนข้อมูลเรียบร้อย ✅'**
   String get restored;
+
+  /// Ours (step 10: the app follows the Case Studio).
+  ///
+  /// In th, this message translates to:
+  /// **'เคสจากสตูดิโอ'**
+  String get studioTitle;
+
+  /// Ours (step 10: the app follows the Case Studio).
+  ///
+  /// In th, this message translates to:
+  /// **'รับเคสจากสตูดิโอ'**
+  String get studioFollow;
+
+  /// Ours (step 10: the app follows the Case Studio).
+  ///
+  /// In th, this message translates to:
+  /// **'เมื่อเปิดแอปและมีอินเทอร์เน็ต แอปจะใช้ชุดเคสล่าสุดที่อาจารย์ประกาศใช้ในสตูดิโอ'**
+  String get studioFollowHint;
+
+  /// Ours (step 10: the app follows the Case Studio).
+  ///
+  /// In th, this message translates to:
+  /// **'🔄 ตรวจหาเคสใหม่'**
+  String get studioCheckNow;
+
+  /// Ours (step 10: the app follows the Case Studio).
+  ///
+  /// In th, this message translates to:
+  /// **'ใช้ชุดเคสฉบับที่ {revision} จากสตูดิโอ'**
+  String studioPlaying(int revision);
+
+  /// Ours (step 10: the app follows the Case Studio).
+  ///
+  /// In th, this message translates to:
+  /// **'อัปเดตเคสจากสตูดิโอแล้ว: ฉบับที่ {revision} ({count} เคส)'**
+  String studioUpdated(int revision, int count);
+
+  /// Ours (step 10: the app follows the Case Studio).
+  ///
+  /// In th, this message translates to:
+  /// **'เป็นชุดเคสล่าสุดแล้ว (ฉบับที่ {revision})'**
+  String studioUpToDate(int revision);
+
+  /// Ours (step 10: the app follows the Case Studio).
+  ///
+  /// In th, this message translates to:
+  /// **'สตูดิโอยังไม่ได้ประกาศใช้เคส: ใช้เคสชุดเดิม'**
+  String get studioNothing;
+
+  /// Ours (step 10: the app follows the Case Studio).
+  ///
+  /// In th, this message translates to:
+  /// **'ติดต่อสตูดิโอไม่ได้: ใช้เคสชุดเดิม'**
+  String get studioUnreachable;
+
+  /// Ours (step 10: the app follows the Case Studio).
+  ///
+  /// In th, this message translates to:
+  /// **'ชุดเคสฉบับที่ {revision} ในสตูดิโอเปิดในแอปนี้ไม่ได้: ใช้เคสชุดเดิม (ลองอัปเดตแอป)'**
+  String studioRefused(int revision);
+
+  /// Ours (step 10: the app follows the Case Studio).
+  ///
+  /// In th, this message translates to:
+  /// **'กำลังตรวจหาเคสใหม่…'**
+  String get studioChecking;
+
+  /// Ours (step 10: the app follows the Case Studio).
+  ///
+  /// In th, this message translates to:
+  /// **'ตรวจล่าสุด {time}'**
+  String studioCheckedAt(String time);
+
+  /// Ours (step 10: the app follows the Case Studio).
+  ///
+  /// In th, this message translates to:
+  /// **'และจะหยุดรับเคสจากสตูดิโอ (เปิดอีกครั้งได้ที่ รับเคสจากสตูดิโอ)'**
+  String get studioStopsFollowing;
+
+  /// Ours (step 10: the app follows the Case Studio).
+  ///
+  /// In th, this message translates to:
+  /// **'ใช้เคสจากสตูดิโอ {count} เคส'**
+  String casesFromStudio(int count);
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

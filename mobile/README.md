@@ -4,7 +4,13 @@ The CCU nursing training game, rebuilt in Flutter for Google Play and the App St
 Express app beside this folder (`../frontend`, `../backend`) is the spec: the game rules and the 8
 cases come from there.
 
-Offline: no server, no accounts, no network calls, no analytics.
+It plays offline: no accounts, no analytics, and nothing about the player leaves the phone. Since step 10
+(2026-11-06) it follows the Case Studio (`../studio`): when it opens with a network, and on ตรวจหาเคสใหม่ in
+Settings, it asks the studio's public feed for the newest published case set (`lib/data/studio_feed.dart`,
+`lib/data/studio_follow.dart`) and takes it if it is newer and passes the same check as a file import.
+Importing a file or going back to the shipped cases stops following (the switch รับเคสจากสตูดิโอ turns it on
+again). `--dart-define=STUDIO_URL=...` points a build at another studio; the default is
+https://studio.criticalcare.212cafe.com.
 
 ## Layout
 
