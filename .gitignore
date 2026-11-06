@@ -29,7 +29,6 @@ frontend/.env
 *.key
 backend/prisma/*.db
 backend/prisma/*.db-*
-studio/data/
 
 # Vite / Bundler / Tooling Caches
 .vite/

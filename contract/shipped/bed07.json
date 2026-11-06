@@ -1,0 +1,351 @@
+{
+  "bedNum": 7,
+  "bedCode": "เตียง 07 CCU",
+  "patientName": "นายวิชัย (55 ปี)",
+  "patientAge": 55,
+  "caseTitle": "การทำ Synchronized Cardioversion",
+  "dxBadge": "Unstable VT with Pulse",
+  "status": "critical",
+  "statusText": "HR 178 VT",
+  "doctorName": "นพ. กิตติ (แพทย์ CCU)",
+  "doctorAvatar": "👨‍⚕️",
+  "stayDuration": "วันที่ 1 ใน CCU",
+  "clinicalNote": "VT with pulse ฉุกเฉิน เตรียมทำ Cardioversion",
+  "stageData": [
+    {
+      "id": 1,
+      "name": "1. เตรียมคนไข้",
+      "mechanic": "เลือก 1|N + เรียงลำดับ",
+      "reading": "ผู้ป่วย Monomorphic VT มีชีพจร (With Pulse) HR 178 bpm แต่เริ่มมีความดันโลหิตต่ำและเจ็บหน้าอก ต้องทำ Synchronized Cardioversion ทันทีโดยให้ยาสงบประสาทก่อนถ้ายังรู้ตัว",
+      "doctorSpeech": "💬 \"คนไข้เป็น Unstable VT with pulse HR 178 ความดันเริ่มตกแล้ว เตรียมทำ Synchronized Cardioversion ด่วนครับ!\"",
+      "vitals": {
+        "hr": 178,
+        "bp": "84/52",
+        "spo2": "92%",
+        "map": 62
+      },
+      "choices1toN": {
+        "prompt": "1.1 เลือกสิ่งที่ต้องประเมินและเตรียมก่อนทำ Synchronized Cardioversion (เลือกได้หลายข้อ)",
+        "options": [
+          {
+            "id": "vc1",
+            "text": "คลำชีพจรยืนยันว่ายังมีชีพจร (VT with pulse) และประเมินความรู้สึกตัว",
+            "correct": true
+          },
+          {
+            "id": "vc2",
+            "text": "เตรียมให้ยาสงบประสาท/แก้ปวด (Sedation เช่น Midazolam/Fentanyl) ตามคำสั่งแพทย์",
+            "correct": true
+          },
+          {
+            "id": "vc3",
+            "text": "ถอดฟันปลอม เปิดทางเดินหายใจ และเตรียม Ambu bag ต่อออกซิเจน 100%",
+            "correct": true
+          },
+          {
+            "id": "vc4",
+            "text": "ปล่อยให้ผู้ป่วยตื่นเต็มที่โดยไม่ให้ยาระงับความรู้สึกและไม่ติดแผ่น EKG Lead",
+            "correct": false
+          }
+        ]
+      },
+      "sequenceTask": {
+        "prompt": "1.2 เรียงลำดับขั้นตอนเตรียมผู้ป่วยก่อนช็อกไฟฟ้าแบบซิงโครไนซ์ (1 ➔ 4)",
+        "pool": [
+          {
+            "id": "vs3",
+            "text": "ติด ECG Electrodes ทั้ง 3/5 Leads เข้ากับเครื่อง Defibrillator เพื่อจับยอด R-wave"
+          },
+          {
+            "id": "vs1",
+            "text": "ประเมินชีพจร คะแนนความรู้สึกตัว และแจ้งข้อมูลสั้นๆ แก่ผู้ป่วย"
+          },
+          {
+            "id": "vs4",
+            "text": "บริหารยา Sedation ทางหลอดเลือดดำและให้ออกซิเจนสำรองเมื่อผู้ป่วยเริ่มหลับ"
+          },
+          {
+            "id": "vs2",
+            "text": "จัดท่านอนราบ เปิดเสื้อบริเวณหน้าอก เช็ดผิวให้แห้ง และถอดโลหะออกจากตัวผู้ป่วย"
+          }
+        ],
+        "correctOrder": [
+          "vs1",
+          "vs2",
+          "vs3",
+          "vs4"
+        ]
+      }
+    },
+    {
+      "id": 2,
+      "name": "2. เตรียมถาด",
+      "mechanic": "จัด 2 ถาด (ไม่เรียงลำดับ)",
+      "reading": "แยกอุปกรณ์ชุดเครื่องกระตุกหัวใจไฟฟ้า (Defibrillator, แผ่น Pads/เจลสื่อไฟฟ้า, ยาต้านเต้นผิดจังหวะ) กับ ถาดช่วยหายใจและยาสงบประสาทฉุกเฉิน",
+      "doctorSpeech": "💬 \"เข็นรถ Emergency มาแล้ว จัดถาดเครื่องช็อกไฟฟ้า กับ ถาดทางเดินหายใจและยา Sedation ให้พร้อมใน 20 วินาทีครับ!\"",
+      "vitals": {
+        "hr": 180,
+        "bp": "82/50",
+        "spo2": "93%",
+        "map": 60
+      },
+      "traysTask": {
+        "ordered": false,
+        "prompt": "หยิบอุปกรณ์ลงใน 2 ถาดให้ถูกต้อง",
+        "trays": [
+          {
+            "id": "vtr1",
+            "name": "🟩 ถาดเครื่องช็อกไฟฟ้าและยาหัวใจ (Cardioversion Tray)",
+            "sterile": true,
+            "expectedIds": [
+              "ve1",
+              "ve2",
+              "ve3",
+              "ve4"
+            ]
+          },
+          {
+            "id": "vtr2",
+            "name": "🟦 ถาดช่วยหายใจและยาสงบประสาท (Airway & Sedation Tray)",
+            "sterile": false,
+            "expectedIds": [
+              "ve5",
+              "ve6",
+              "ve7"
+            ]
+          }
+        ],
+        "pool": [
+          {
+            "id": "ve1",
+            "text": "เครื่อง Defibrillator (Sync)",
+            "img": "./assets/equipment/ecg_monitor.png"
+          },
+          {
+            "id": "ve5",
+            "text": "Ambu Bag ต่อออกซิเจน",
+            "img": "./assets/equipment/oxygen_mask.png"
+          },
+          {
+            "id": "ve2",
+            "text": "ยา Amiodarone",
+            "img": "./assets/equipment/medicine_bottle.png"
+          },
+          {
+            "id": "ve6",
+            "text": "ไซริงค์ยา Midazolam",
+            "img": "./assets/equipment/syringe.png"
+          },
+          {
+            "id": "ve3",
+            "text": "แผ่นนำไฟฟ้า/เจลสื่อไฟฟ้า",
+            "img": "./assets/equipment/first_aid_kit.png"
+          },
+          {
+            "id": "ve7",
+            "text": "เครื่องวัดออกซิเจนปลายนิ้ว",
+            "img": "./assets/equipment/pulse_oximeter.png"
+          },
+          {
+            "id": "ve4",
+            "text": "เครื่องวัดความดันโลหิต",
+            "img": "./assets/equipment/bp_monitor.png"
+          }
+        ]
+      }
+    },
+    {
+      "id": 3,
+      "name": "3. ส่งเครื่องมือ",
+      "mechanic": "จัด 2 ถาด (เรียงลำดับ 1-3)",
+      "reading": "หัวใจสำคัญที่สุดของ Cardioversion คือต้องกดปุ่ม SYNC ให้เห็นจุด Marker บนยอด R-wave ทุกตัว เพื่อป้องกันการปล่อยไฟลงบน T-wave ซึ่งจะทำให้เกิด VF ทันที!",
+      "doctorSpeech": "💬 \"คนไข้หลับแล้ว ตั้งโหมด SYNC ชาร์จพลังงาน 100 Joules และเคลียร์เตียงตามลำดับ 1 ➔ 2 ➔ 3 เลยครับ!\"",
+      "vitals": {
+        "hr": 176,
+        "bp": "82/48",
+        "spo2": "95%",
+        "map": 59
+      },
+      "traysTask": {
+        "ordered": true,
+        "prompt": "ปฏิบัติขั้นตอนในถาดระยะ 1 และ 2 โดย **ต้องเรียงลำดับก่อน-หลัง (1 ➔ 2 ➔ 3)**",
+        "trays": [
+          {
+            "id": "vdtr1",
+            "name": "🟩 ถาดระยะที่ 1: เปิดโหมด SYNC & เลือกพลังงาน (เรียง 1 ➔ 3)",
+            "sterile": true,
+            "expectedOrder": [
+              "vd1",
+              "vd2",
+              "vd3"
+            ]
+          },
+          {
+            "id": "vdtr2",
+            "name": "🟦 ถาดระยะที่ 2: ชาร์จไฟ เคลียร์เตียง & ปล่อยกระแสไฟ (เรียง 1 ➔ 3)",
+            "sterile": false,
+            "expectedOrder": [
+              "vd4",
+              "vd5",
+              "vd6"
+            ]
+          }
+        ],
+        "pool": [
+          {
+            "id": "vd3",
+            "text": "เลือกพลังงาน Biphasic 100 Joules สำหรับ Monomorphic VT with pulse"
+          },
+          {
+            "id": "vd1",
+            "text": "ทาเจลสื่อไฟฟ้าและวาง Paddle ตำแหน่ง Sternum (ใต้ไหปลาร้าขวา) และ Apex (ชายโครงซ้าย)"
+          },
+          {
+            "id": "vd6",
+            "text": "กดปุ่ม Shock ค้างไว้จนกระทั่งเครื่องจับจังหวะ R-wave และปล่อยกระแสไฟฟ้าออกไป"
+          },
+          {
+            "id": "vd2",
+            "text": "กดปุ่ม SYNC บนหน้าจอเครื่อง และตรวจสอบจุด Marker บนยอด R-wave ทุกจังหวะ"
+          },
+          {
+            "id": "vd5",
+            "text": "ขานเตือน \"ฉันถอย คุณถอย ทุกคนถอย\" และนำแหล่งออกซิเจนห่างจากหน้าอกผู้ป่วย"
+          },
+          {
+            "id": "vd4",
+            "text": "กดปุ่ม Charge พลังงานที่ด้าม Paddle และรอสัญญาณเสียงพร้อมทำงาน"
+          }
+        ]
+      }
+    },
+    {
+      "id": 4,
+      "name": "4. ปฏิบัติการพยาบาล",
+      "mechanic": "ลาก-วาง ไม่เป็นลำดับ",
+      "reading": "หลังปล่อยกระแสไฟฟ้า ต้องดูคลื่นหัวใจและคลำชีพจรทันที ประเมินการหายใจหลังได้ยา Sedation และหากต้องช็อกซ้ำต้องกดปุ่ม SYNC ใหม่ทุกครั้ง",
+      "doctorSpeech": "💬 \"ช็อกไฟฟ้า 100 Joules ไปแล้วครับ! ดูหน้าจอมอนิเตอร์และตรวจประเมินผู้ป่วยทันทีครับ\"",
+      "vitals": {
+        "hr": 84,
+        "bp": "112/70",
+        "spo2": "98%",
+        "map": 84
+      },
+      "unorderedDropTask": {
+        "prompt": "ลากการพยาบาลที่ถูกต้อง (4 ข้อ) ลงในพื้นที่ปฏิบัติงาน (วางสลับลำดับได้)",
+        "expectedIds": [
+          "va1",
+          "va2",
+          "va3",
+          "va4"
+        ],
+        "pool": [
+          {
+            "id": "va1",
+            "text": "📈 ตรวจดูคลื่นไฟฟ้าหัวใจบนมอนิเตอร์ (กลับมาเป็น Sinus Rhythm) และคลำชีพจรทันที"
+          },
+          {
+            "id": "vaw1",
+            "text": "หากต้องช็อกครั้งที่ 2 ให้กดปุ่ม Shock ทันทีโดยไม่ต้องเช็กปุ่ม SYNC อีก"
+          },
+          {
+            "id": "va2",
+            "text": "🫁 ประเมินทางเดินหายใจ อัตราการหายใจ และค่า SpO2 จากฤทธิ์ยา Sedation"
+          },
+          {
+            "id": "va3",
+            "text": "💓 วัดความดันโลหิตซ้ำ และประเมินระดับความรู้สึกตัวของผู้ป่วยขณะฟื้นจากยา"
+          },
+          {
+            "id": "vaw2",
+            "text": "ถอดสายมอนิเตอร์ออกทั้งหมดทันทีที่เห็นคลื่นหัวใจเต้นช้าลง"
+          },
+          {
+            "id": "va4",
+            "text": "🧴 ทำความสะอาดคราบเจลบนหน้าอก และตรวจดูรอยแดงไหม้บริเวณผิวหนังที่วาง Paddle"
+          }
+        ]
+      }
+    },
+    {
+      "id": 5,
+      "name": "5. ดูแลหลังทำ",
+      "mechanic": "ลาก-วาง เรียงลำดับ",
+      "reading": "ทำ 12-lead ECG ยืนยันจังหวะหัวใจ ส่งตรวจเกลือแร่ (K+, Mg2+) และให้ยา Amiodarone หยดทางหลอดเลือดดำเพื่อป้องกันการกลับเป็นซ้ำ",
+      "doctorSpeech": "💬 \"กลับมาเป็น Normal Sinus Rhythm HR 82 bpm แล้วครับ ดูแลต่อเนื่องตามลำดับมาตรฐานเลยครับ\"",
+      "vitals": {
+        "hr": 82,
+        "bp": "118/74",
+        "spo2": "99%",
+        "map": 88
+      },
+      "sequenceTask": {
+        "prompt": "ลาก-วาง ขั้นตอนการดูแลหลังทำ Cardioversion สำเร็จ เรียงตามลำดับ (1 ➔ 4)",
+        "pool": [
+          {
+            "id": "vp3",
+            "text": "เจาะเลือดส่งตรวจ Electrolytes (K+, Mg2+) และ Cardiac Enzymes เพื่อหาสาเหตุชักนำ"
+          },
+          {
+            "id": "vp1",
+            "text": "ทำคลื่นไฟฟ้าหัวใจ 12-Lead ECG บันทึกจังหวะ Sinus Rhythm หลังการช็อกไฟฟ้า"
+          },
+          {
+            "id": "vp4",
+            "text": "เฝ้าระวังคลื่นหัวใจอย่างต่อเนื่อง และทำความสะอาดเก็บอุปกรณ์รถ Emergency ให้พร้อมใช้"
+          },
+          {
+            "id": "vp2",
+            "text": "เริ่มหยดยา Amiodarone Maintenance dose ทาง Infusion Pump ตามแผนการรักษา"
+          }
+        ],
+        "correctOrder": [
+          "vp1",
+          "vp2",
+          "vp3",
+          "vp4"
+        ]
+      }
+    },
+    {
+      "id": 6,
+      "name": "6. สรุป & ส่งเวร",
+      "mechanic": "สรุป ISBAR เรียงลำดับ",
+      "reading": "สรุปพลังงานที่ใช้ (100J Biphasic), ยา Sedation ที่ได้รับ, จังหวะหัวใจหลังช็อก และแผนการให้ยาต้านหัวใจเต้นผิดจังหวะตามหลัก ISBAR",
+      "doctorSpeech": "💬 \"คนไข้ตื่นดี ความดัน 120/76 คงที่แล้ว สรุปบันทึกส่งเวรตามลำดับ ISBAR ได้เลยครับ\"",
+      "vitals": {
+        "hr": 80,
+        "bp": "120/76",
+        "spo2": "99%",
+        "map": 90
+      },
+      "sequenceTask": {
+        "prompt": "ลาก-วาง สรุปบันทึกส่งเวรตามโครงสร้าง ISBAR (1 ➔ 4)",
+        "pool": [
+          {
+            "id": "vis2",
+            "text": "[B - Background] ให้ Midazolam 3 mg IV และทำ Synchronized Cardioversion 100 Joules x 1 ครั้ง สำเร็จ"
+          },
+          {
+            "id": "vis4",
+            "text": "[R - Recommendation] แผน: หยดยา Amiodarone ต่อเนื่อง, ติดตามผล K+/Mg2+ และเฝ้าระวัง VT ซ้ำ"
+          },
+          {
+            "id": "vis1",
+            "text": "[I & S] นายวิชัย เตียง 07 Unstable VT with pulse หลังทำ Synchronized Cardioversion"
+          },
+          {
+            "id": "vis3",
+            "text": "[A - Assessment] ปัจจุบันเป็น Normal Sinus Rhythm HR 80 bpm, BP 120/76, รู้สึกตัวดี ไม่มีเจ็บหน้าอก"
+          }
+        ],
+        "correctOrder": [
+          "vis1",
+          "vis2",
+          "vis3",
+          "vis4"
+        ]
+      }
+    }
+  ]
+}

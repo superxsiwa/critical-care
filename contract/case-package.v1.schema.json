@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://github.com/superxsiwa/critical-care/blob/master/contract/case-package.v1.schema.json",
+  "$id": "https://github.com/colabscraft/med-studio/blob/main/contracts/critical-care/case-package.v1.schema.json",
   "title": "Critical Care case package, version 1",
   "description": "The file that carries cases from the Case Studio to the app. The case objects are the shape of BedCasePayload in backend/src/services/beds/types.ts. This schema checks the structure; the rules it cannot express are listed in contract/README.md and checked in code.",
   "type": "object",

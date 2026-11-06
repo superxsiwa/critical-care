@@ -73,6 +73,18 @@ void main() {
     expect(result.isValid, isTrue, reason: '${result.errors}');
   });
 
+  // The contract's shipped/ is the Studio's copy of the app's 8 cases (its tests accept them): kept equal.
+  test("the contract's shipped cases are the app's bundled cases", () {
+    for (var n = 1; n <= 8; n++) {
+      final name = 'bed${'$n'.padLeft(2, '0')}.json';
+      expect(
+        jsonDecode(File('$contract/shipped/$name').readAsStringSync()),
+        jsonDecode(File('assets/cases/$name').readAsStringSync()),
+        reason: name,
+      );
+    }
+  });
+
   test('the schema names the same format and version as the app', () {
     final props =
         (jsonDecode(File('$contract/case-package.v1.schema.json').readAsStringSync())
