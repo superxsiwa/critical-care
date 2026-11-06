@@ -100,6 +100,15 @@
     "about": "Written by the Case Studio's server (its export test keeps it current): the app must read what the studio exports"
   },
   {
+    "file": "valid/studio-published.json",
+    "ok": true,
+    "beds": [
+      9
+    ],
+    "schema": "pass",
+    "about": "A revision the Case Studio published for the app to follow (step 10), written by its publish test: a version 1 package that also says its revision and publishedAt"
+  },
+  {
     "file": "invalid/rule-status-not-text.json",
     "ok": false,
     "problems": [

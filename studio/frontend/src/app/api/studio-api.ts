@@ -10,6 +10,7 @@ import {
   JsonObject,
   KnowledgeArticle,
   Problem,
+  PublishedRevision,
   Refusal,
 } from './types';
 
@@ -176,6 +177,14 @@ export class StudioApi {
         this.http.delete<void>(`/api/knowledge/${id}`, { params: { version: String(version) } }),
       ),
     );
+  }
+
+  /**
+   * Publishes every draft to the app as the next revision, only if the app would accept the set
+   * (else 422 `not-ready` with the problems, as the export).
+   */
+  publish(): Promise<PublishedRevision> {
+    return call(firstValueFrom(this.http.post<PublishedRevision>('/api/publish', null)));
   }
 
   /** Every draft as one package, only if the app would accept it (else 422 with the problems). */

@@ -226,3 +226,26 @@ func WritePackage(cases []json.RawMessage, exportedAt time.Time) ([]byte, error)
 	}
 	return buf.Bytes(), nil
 }
+
+// WritePublished is the package of a published revision (step 10): WritePackage's file, which also
+// says its revision and when it was published. Readers of version 1 keep and ignore keys they do not
+// know, so it stays a version 1 package; exportedAt is the publishing time too.
+func WritePublished(cases []json.RawMessage, revision int64, publishedAt time.Time) ([]byte, error) {
+	at := publishedAt.UTC().Format(time.RFC3339)
+	pkg := struct {
+		Format      string            `json:"format"`
+		Version     int               `json:"version"`
+		Revision    int64             `json:"revision"`
+		PublishedAt string            `json:"publishedAt"`
+		ExportedAt  string            `json:"exportedAt"`
+		Cases       []json.RawMessage `json:"cases"`
+	}{PackageFormat, PackageVersion, revision, at, at, cases}
+	var buf bytes.Buffer
+	enc := json.NewEncoder(&buf)
+	enc.SetEscapeHTML(false)
+	enc.SetIndent("", "  ")
+	if err := enc.Encode(pkg); err != nil {
+		return nil, err
+	}
+	return buf.Bytes(), nil
+}

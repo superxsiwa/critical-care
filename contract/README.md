@@ -27,6 +27,10 @@ the same way; the files in this folder are the agreement.
 - `cases` holds one or more cases in the shape of `BedCasePayload` (`backend/src/services/beds/types.ts`),
   the same shape as the 8 cases shipped in the app. Other keys are kept and ignored.
 - An import replaces every case in the app, as his import does.
+- **A published revision** (the studio's feed, step 10) is this same package with two more keys:
+  `revision` (1, 2, ...; a revision never changes) and `publishedAt`. Readers of version 1 keep and ignore
+  them, so a published file can also be imported as a file. Example: `examples/valid/studio-published.json`,
+  written by the studio's publish test.
 
 **Older files still read:** a plain list of cases, or `{"cases": [...]}` without `format`, as the app's
 export and the React app write them. There a missing `bedNum` takes the case's place in the list.

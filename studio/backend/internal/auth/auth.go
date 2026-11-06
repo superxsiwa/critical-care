@@ -89,15 +89,16 @@ func (s *Service) q() *store.Queries { return store.New(s.db) }
 
 func (s *Service) stamp() string { return s.now().UTC().Format(time.RFC3339) }
 
-// open are the /api routes that answer without a session: the app's facts, who is signed in, and
-// signing in or out.
+// open are the /api routes that answer without a session: the app's facts, who is signed in, signing
+// in or out, and the published cases the app follows.
 func open(path string) bool {
 	switch path {
 	case "/api/meta", "/api/auth/session", "/api/auth/signin", "/api/auth/signout",
-		"/api/auth/google/start", "/api/auth/google/callback":
+		"/api/auth/google/start", "/api/auth/google/callback",
+		"/api/published": // the app's feed (step 10): what is published is public, read only
 		return true
 	}
-	return false
+	return strings.HasPrefix(path, "/api/published/")
 }
 
 // Guard checks every /api request: a write must come from our own page (CSRF), a closed route needs

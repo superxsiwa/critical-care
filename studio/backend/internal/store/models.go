@@ -46,6 +46,14 @@ type Knowledge struct {
 	UpdatedBy sql.NullInt64
 }
 
+type Published struct {
+	Revision    int64
+	Package     string
+	Cases       int64
+	PublishedAt string
+	PublishedBy sql.NullInt64
+}
+
 type User struct {
 	ID           int64
 	Username     string
