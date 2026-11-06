@@ -23,6 +23,9 @@ class DbProgressStore implements ProgressStore {
   static const _noticeKey = 'notice.seen';
   static const _soundKey = 'settings.sound';
   static const _hapticsKey = 'settings.haptics';
+  static const _followKey = 'studio.follow';
+  static const _revisionKey = 'studio.revision';
+  static const _checkedKey = 'studio.checkedAt';
 
   Future<GameDatabase> get _open async {
     await _ready;
@@ -61,6 +64,30 @@ class DbProgressStore implements ProgressStore {
       );
     });
     await saveSettings(GameSettings(sound: data.sound, haptics: data.haptics));
+    await _prefs.remove(_revisionKey);
+  }
+
+  @override
+  Future<StudioLink> loadStudio() async {
+    final checked = await _prefs.getString(_checkedKey);
+    return StudioLink(
+      follow: await _prefs.getBool(_followKey) ?? true,
+      revision: await _prefs.getInt(_revisionKey),
+      checkedAt: checked == null ? null : DateTime.tryParse(checked),
+    );
+  }
+
+  @override
+  Future<void> saveStudio(StudioLink link) async {
+    await _prefs.setBool(_followKey, link.follow);
+    final revision = link.revision;
+    revision == null
+        ? await _prefs.remove(_revisionKey)
+        : await _prefs.setInt(_revisionKey, revision);
+    final checked = link.checkedAt;
+    checked == null
+        ? await _prefs.remove(_checkedKey)
+        : await _prefs.setString(_checkedKey, checked.toUtc().toIso8601String());
   }
 
   @override

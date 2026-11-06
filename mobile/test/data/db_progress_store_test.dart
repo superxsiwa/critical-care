@@ -116,4 +116,28 @@ void main() {
     await store.restore(const PlayerData(progress: Progress.empty, roster: Roster.empty));
     expect(await store.loadImportedCases(), isNull);
   });
+
+  test(
+    'following the studio: on by default, kept, and a restored backup forgets the revision',
+    () async {
+      final store = cleanInstall();
+      final first = await store.loadStudio();
+      expect(first.follow, isTrue);
+      expect(first.revision, isNull);
+      expect(first.checkedAt, isNull);
+
+      final at = DateTime.utc(2026, 11, 6, 10, 30);
+      await store.saveStudio(StudioLink(revision: 4, checkedAt: at));
+      var link = await store.loadStudio();
+      expect((link.follow, link.revision, link.checkedAt), (true, 4, at));
+
+      // The restored cases may be another phone's: the next check takes the newest set again.
+      await store.restore(const PlayerData(progress: Progress.empty, roster: Roster.empty));
+      link = await store.loadStudio();
+      expect((link.follow, link.revision), (true, null));
+
+      await store.saveStudio(const StudioLink(follow: false));
+      expect((await store.loadStudio()).follow, isFalse);
+    },
+  );
 }

@@ -253,7 +253,7 @@
   "aboutCases": "เคสและการออกแบบเกม: superxsiwa (A-WARD CCU)",
   "aboutClinical": "ตรวจทานเนื้อหาทางคลินิก: พยาบาลวิชาชีพ (อยู่ระหว่างตรวจทาน)",
   "aboutBuiltBy": "พัฒนาแอป: ColabsCraft",
-  "aboutOffline": "ทำงานออฟไลน์ ไม่ส่งข้อมูลใดๆ ออกจากเครื่อง ความก้าวหน้าเก็บไว้ในเครื่องนี้เท่านั้น",
+  "aboutOffline": "เล่นได้แบบออฟไลน์ ความก้าวหน้าเก็บไว้ในเครื่องนี้เท่านั้น ไม่ส่งข้อมูลของผู้เล่นออกจากเครื่อง เมื่อรับเคสจากสตูดิโอ แอปขอเพียงชุดเคสล่าสุดที่อาจารย์ประกาศใช้",
   "aboutLicenses": "สัญญาอนุญาตโอเพนซอร์ส",
   "settingsTitle": "ตั้งค่า",
   "soundTitle": "🔊 เสียงเอฟเฟกต์",
@@ -647,5 +647,94 @@
   "restored": "กู้คืนข้อมูลเรียบร้อย ✅",
   "@restored": {
     "description": "Ours (#19)."
+  },
+  "studioTitle": "เคสจากสตูดิโอ",
+  "@studioTitle": {
+    "description": "Ours (step 10: the app follows the Case Studio)."
+  },
+  "studioFollow": "รับเคสจากสตูดิโอ",
+  "@studioFollow": {
+    "description": "Ours (step 10: the app follows the Case Studio)."
+  },
+  "studioFollowHint": "เมื่อเปิดแอปและมีอินเทอร์เน็ต แอปจะใช้ชุดเคสล่าสุดที่อาจารย์ประกาศใช้ในสตูดิโอ",
+  "@studioFollowHint": {
+    "description": "Ours (step 10: the app follows the Case Studio)."
+  },
+  "studioCheckNow": "🔄 ตรวจหาเคสใหม่",
+  "@studioCheckNow": {
+    "description": "Ours (step 10: the app follows the Case Studio)."
+  },
+  "studioPlaying": "ใช้ชุดเคสฉบับที่ {revision} จากสตูดิโอ",
+  "@studioPlaying": {
+    "description": "Ours (step 10: the app follows the Case Studio).",
+    "placeholders": {
+      "revision": {
+        "type": "int"
+      }
+    }
+  },
+  "studioUpdated": "อัปเดตเคสจากสตูดิโอแล้ว: ฉบับที่ {revision} ({count} เคส)",
+  "@studioUpdated": {
+    "description": "Ours (step 10: the app follows the Case Studio).",
+    "placeholders": {
+      "revision": {
+        "type": "int"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "studioUpToDate": "เป็นชุดเคสล่าสุดแล้ว (ฉบับที่ {revision})",
+  "@studioUpToDate": {
+    "description": "Ours (step 10: the app follows the Case Studio).",
+    "placeholders": {
+      "revision": {
+        "type": "int"
+      }
+    }
+  },
+  "studioNothing": "สตูดิโอยังไม่ได้ประกาศใช้เคส: ใช้เคสชุดเดิม",
+  "@studioNothing": {
+    "description": "Ours (step 10: the app follows the Case Studio)."
+  },
+  "studioUnreachable": "ติดต่อสตูดิโอไม่ได้: ใช้เคสชุดเดิม",
+  "@studioUnreachable": {
+    "description": "Ours (step 10: the app follows the Case Studio)."
+  },
+  "studioRefused": "ชุดเคสฉบับที่ {revision} ในสตูดิโอเปิดในแอปนี้ไม่ได้: ใช้เคสชุดเดิม (ลองอัปเดตแอป)",
+  "@studioRefused": {
+    "description": "Ours (step 10: the app follows the Case Studio).",
+    "placeholders": {
+      "revision": {
+        "type": "int"
+      }
+    }
+  },
+  "studioChecking": "กำลังตรวจหาเคสใหม่…",
+  "@studioChecking": {
+    "description": "Ours (step 10: the app follows the Case Studio)."
+  },
+  "studioCheckedAt": "ตรวจล่าสุด {time}",
+  "@studioCheckedAt": {
+    "description": "Ours (step 10: the app follows the Case Studio).",
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "studioStopsFollowing": "และจะหยุดรับเคสจากสตูดิโอ (เปิดอีกครั้งได้ที่ รับเคสจากสตูดิโอ)",
+  "@studioStopsFollowing": {
+    "description": "Ours (step 10: the app follows the Case Studio)."
+  },
+  "casesFromStudio": "ใช้เคสจากสตูดิโอ {count} เคส",
+  "@casesFromStudio": {
+    "description": "Ours (step 10: the app follows the Case Studio).",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   }
 }

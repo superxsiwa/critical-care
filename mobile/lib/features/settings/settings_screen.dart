@@ -2,18 +2,21 @@ import 'package:clock/clock.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
 
 import '../../app/theme.dart';
 import '../../data/backup_service.dart';
 import '../../data/case_files.dart';
 import '../../data/progress_store.dart';
 import '../../data/providers.dart';
+import '../../data/studio_follow.dart';
 import '../../game/backup.dart';
 import '../../game/case_import.dart';
 import '../../l10n/generated/app_localizations.dart';
 
-/// Sound, vibration, the cases (his JSON export and import, back to the standard cases), the
-/// backup file (#19) and "reset progress", after his SettingsPage and CaseManagerPage.
+/// Sound, vibration, following the Case Studio (step 10), the cases (his JSON export and import,
+/// back to the standard cases), the backup file (#19) and "reset progress", after his SettingsPage
+/// and CaseManagerPage.
 class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key});
 
@@ -23,6 +26,8 @@ class SettingsScreen extends ConsumerWidget {
     final settings = ref.watch(settingsProvider).value ?? const GameSettings();
     final notifier = ref.read(settingsProvider.notifier);
     final caseSet = ref.watch(caseSetProvider).value;
+    final studio = ref.watch(studioProvider).value;
+    final fromStudio = (caseSet?.imported ?? false) && studio?.link.revision != null;
     return Scaffold(
       appBar: AppBar(title: Text(l.settingsTitle)),
       body: ListView(
@@ -47,6 +52,7 @@ class SettingsScreen extends ConsumerWidget {
               ],
             ),
           ),
+          if (studio != null) _studioCard(context, ref, l, studio),
           Card(
             color: Colors.white,
             child: Column(
@@ -59,7 +65,9 @@ class SettingsScreen extends ConsumerWidget {
                   subtitle: caseSet == null
                       ? null
                       : Text(
-                          caseSet.imported
+                          fromStudio
+                              ? l.casesFromStudio(caseSet.cases.length)
+                              : caseSet.imported
                               ? l.casesImported(caseSet.cases.length)
                               : l.casesShipped(caseSet.cases.length),
                         ),
@@ -210,7 +218,7 @@ class SettingsScreen extends ConsumerWidget {
           context,
           l,
           title: l.importConfirmTitle,
-          body: l.importConfirmBody(result.cases.length),
+          body: _stopsFollowing(ref, l, l.importConfirmBody(result.cases.length)),
           yes: l.importConfirm,
         );
         if (!ok) return;
@@ -288,12 +296,86 @@ class SettingsScreen extends ConsumerWidget {
     }
   }
 
+  /// The line that says what following the studio gives now.
+  String? _studioLine(AppLocalizations l, StudioStatus status) {
+    final checked = status.link.checkedAt;
+    final when = checked == null
+        ? null
+        : l.studioCheckedAt(DateFormat('d MMM HH:mm', 'th').format(checked.toLocal()));
+    final revision = status.link.revision;
+    final line = switch (status.last) {
+      _ when status.checking => l.studioChecking,
+      StudioCheck.unreachable => l.studioUnreachable,
+      StudioCheck.nothingPublished => l.studioNothing,
+      StudioCheck.refused => l.studioRefused(status.published?.revision ?? 0),
+      _ => revision == null ? null : l.studioPlaying(revision),
+    };
+    if (line == null) return when;
+    return when == null || status.checking ? line : '$line\n$when';
+  }
+
+  Widget _studioCard(BuildContext context, WidgetRef ref, AppLocalizations l, StudioStatus status) {
+    final notifier = ref.read(studioProvider.notifier);
+    final line = status.link.follow ? _studioLine(l, status) : null;
+    return Card(
+      color: Colors.white,
+      child: Column(
+        children: [
+          SwitchListTile(
+            title: Text(
+              l.studioTitle,
+              style: const TextStyle(fontWeight: FontWeight.w600, color: AppColors.sky700),
+            ),
+            subtitle: Text('${l.studioFollow}: ${l.studioFollowHint}'),
+            value: status.link.follow,
+            onChanged: status.checking
+                ? null
+                : (v) async {
+                    final result = await notifier.setFollow(v);
+                    if (result != null && context.mounted) {
+                      _toast(context, _checkToast(l, ref, result));
+                    }
+                  },
+          ),
+          ListTile(
+            leading: const Icon(Icons.sync_rounded),
+            title: Text(l.studioCheckNow),
+            subtitle: line == null ? null : Text(line),
+            enabled: status.link.follow && !status.checking,
+            onTap: () async {
+              final result = await notifier.check();
+              if (result != null && context.mounted) _toast(context, _checkToast(l, ref, result));
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  String _checkToast(AppLocalizations l, WidgetRef ref, StudioCheck result) {
+    final status = ref.read(studioProvider).value;
+    final info = status?.published;
+    return switch (result) {
+      StudioCheck.updated => l.studioUpdated(info?.revision ?? 0, info?.cases ?? 0),
+      StudioCheck.upToDate => l.studioUpToDate(info?.revision ?? 0),
+      StudioCheck.nothingPublished => l.studioNothing,
+      StudioCheck.unreachable => l.studioUnreachable,
+      StudioCheck.refused => l.studioRefused(info?.revision ?? 0),
+    };
+  }
+
+  /// A confirm's body, with the line that following the studio stops when it is on.
+  String _stopsFollowing(WidgetRef ref, AppLocalizations l, String body) =>
+      (ref.read(studioProvider).value?.link.follow ?? false)
+      ? '$body\n${l.studioStopsFollowing}'
+      : body;
+
   Future<void> _useBundled(BuildContext context, WidgetRef ref, AppLocalizations l) async {
     final ok = await _confirm(
       context,
       l,
       title: l.resetCasesTitle,
-      body: l.resetCasesBody,
+      body: _stopsFollowing(ref, l, l.resetCasesBody),
       yes: l.resetCasesConfirm,
     );
     if (!ok) return;

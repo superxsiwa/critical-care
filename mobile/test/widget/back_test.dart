@@ -1,5 +1,7 @@
 import 'package:criticalcare/app/sfx.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:criticalcare/features/about/about_screen.dart';
+import 'package:criticalcare/features/settings/settings_screen.dart';
 
 import '../support/app.dart';
 import '../support/fake_store.dart';
@@ -47,8 +49,9 @@ void main() {
     await openTab(tester, 'ตั้งค่า');
     await tapText(tester, 'เกี่ยวกับ');
     await settle(tester);
-    expect(find.text('🔊 เสียงเอฟเฟกต์'), findsNothing);
+    expect(find.byType(AboutScreen), findsOneWidget);
     await back(tester);
-    expect(find.text('🔊 เสียงเอฟเฟกต์'), findsOneWidget);
+    expect(find.byType(AboutScreen), findsNothing);
+    expect(find.byType(SettingsScreen), findsOneWidget);
   });
 }

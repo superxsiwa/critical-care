@@ -6,6 +6,7 @@ import '../game/case_model.dart';
 import '../game/progress.dart';
 import 'case_repository.dart';
 import 'progress_store.dart';
+import 'studio_follow.dart';
 
 final caseRepositoryProvider = Provider((ref) => CaseRepository(rootBundle));
 
@@ -61,16 +62,19 @@ class CasesNotifier extends AsyncNotifier<CaseSet> {
       readCaseFile(text, imageExists: await _imageExists());
 
   /// The ward takes the file's cases (his import: they replace all of them). Progress stays,
-  /// by bed number, like his; a duty ends, its beds may have changed.
-  Future<void> use(CasesRead read) async {
+  /// by bed number, like his; a duty ends, its beds may have changed. A file the player picked
+  /// ([studioRevision] null) stops following the studio; the studio's own set keeps it.
+  Future<void> use(CasesRead read, {int? studioRevision}) async {
     await ref.read(progressStoreProvider).saveImportedCases(writeCaseFile(read.json));
+    if (studioRevision == null) await ref.read(studioProvider.notifier).stopFollowing();
     ref.read(dutyProvider.notifier).end();
     state = AsyncData(CaseSet(read.cases, json: read.json));
   }
 
-  /// "🔄 คืนค่าเคสตั้งต้น": back to the cases shipped in the app.
+  /// "🔄 คืนค่าเคสตั้งต้น": back to the cases shipped in the app, no longer the studio's.
   Future<void> useBundled() async {
     await ref.read(progressStoreProvider).saveImportedCases(null);
+    await ref.read(studioProvider.notifier).stopFollowing();
     ref.read(dutyProvider.notifier).end();
     state = AsyncData(CaseSet(await ref.read(bundledCasesProvider.future)));
   }

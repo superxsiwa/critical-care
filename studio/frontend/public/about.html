@@ -20,12 +20,16 @@
         <h1>Case Studio</h1>
         <p>
           ที่เขียนเคสของเกมฝึกการพยาบาลผู้ป่วยวิกฤต <strong>Critical Care</strong>: ผู้เขียน (Admin
-          และพยาบาล) เขียนและตรวจเคสที่นี่ แล้วส่งออกทุกเคสเป็นไฟล์เดียวให้แอปนำเข้า
+          และพยาบาล) เขียนและตรวจเคสที่นี่ แล้วประกาศใช้ในแอป
+          หรือส่งออกทุกเคสเป็นไฟล์เดียวให้แอปนำเข้า
         </p>
         <ul>
           <li>เฉพาะผู้ที่ Admin สร้างบัญชีให้ ไม่มีการสมัครเอง</li>
           <li>เข้าสู่ระบบด้วยบัญชี Google หรือด้วยชื่อผู้ใช้และรหัสผ่าน</li>
-          <li>แอป Critical Care ไม่ติดต่อสตูดิโอ เคสไปถึงแอปในรูปไฟล์เท่านั้น</li>
+          <li>
+            แอป Critical Care ขอจากสตูดิโอเพียงชุดเคสล่าสุดที่ประกาศใช้
+            ไม่ส่งข้อมูลของผู้เล่นมาที่สตูดิโอ
+          </li>
           <li>เคสเป็นสถานการณ์สมมติเพื่อการฝึก ห้ามใส่ข้อมูลของผู้ป่วยจริง</li>
         </ul>
         <p><a class="button" href="/signin">เข้าสู่ระบบ</a></p>
@@ -35,12 +39,16 @@
         <h1>Case Studio</h1>
         <p>
           Where the authors of the <strong>Critical Care</strong> nursing training game (Admins and
-          nurses) write and check its cases, then export them as one file the app imports.
+          nurses) write and check its cases, then publish them to the app or export them as one file
+          the app imports.
         </p>
         <ul>
           <li>Only people an admin has given an account; nobody signs up.</li>
           <li>Sign in with a Google account, or with a username and password.</li>
-          <li>The Critical Care app never contacts the studio: cases reach it only as a file.</li>
+          <li>
+            The Critical Care app asks the studio only for the newest published cases: nothing about
+            its players is sent to the studio.
+          </li>
           <li>Cases are made-up training scenarios: never enter a real patient's details.</li>
         </ul>
         <p><a class="button" href="/signin">Sign in</a></p>

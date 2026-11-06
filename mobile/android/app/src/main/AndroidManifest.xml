@@ -1,4 +1,6 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Step 10: the app reads the Case Studio's published cases (one GET, nothing about the player sent). -->
+    <uses-permission android:name="android.permission.INTERNET"/>
     <application
         android:label="Critical Care"
         android:name="${applicationName}"

@@ -12,7 +12,12 @@ class MemoryProgressStore implements ProgressStore {
     this.seen = true,
     this.roster = Roster.empty,
     this.importedCases,
+    this.casesDelay = Duration.zero,
   });
+
+  /// How long reading the imported cases takes: the web's SQLite opens slowly, so the ward's first
+  /// load can finish after the studio's answer.
+  final Duration casesDelay;
 
   Progress progress;
   bool seen;
@@ -50,13 +55,26 @@ class MemoryProgressStore implements ProgressStore {
   Future<void> saveRoster(Roster r) async => roster = r;
 
   @override
-  Future<String?> loadImportedCases() async => importedCases;
+  Future<String?> loadImportedCases() async {
+    final saved = importedCases;
+    if (casesDelay > Duration.zero) await Future<void>.delayed(casesDelay);
+    return saved;
+  }
 
   @override
   Future<void> saveImportedCases(String? json) async => importedCases = json;
 
+  StudioLink studio = const StudioLink();
+
+  @override
+  Future<StudioLink> loadStudio() async => studio;
+
+  @override
+  Future<void> saveStudio(StudioLink link) async => studio = link;
+
   @override
   Future<void> restore(PlayerData data) async {
+    studio = studio.copyWith(revision: () => null);
     progress = data.progress;
     roster = data.roster;
     final cases = data.importedCases;
